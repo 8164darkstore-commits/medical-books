@@ -820,12 +820,20 @@
                             <label class="form-label">Частота отчетов</label>
                             <select class="form-control" id="managerReportFrequency">
                                 <option value="daily">Ежедневно</option>
-                                <option value="weekly" selected>Еженедельно</option>
-                                <option value="monthly">Ежемесячно</option>
+                                <option value="weekly" selected>Еженедельно (выберите дни ниже)</option>
+                                <option value="monthly">Ежемесячно (1 число)</option>
                             </select>
+                            <small class="form-text text-muted">
+                                <strong>Еженедельно:</strong> выберите дни недели ниже<br>
+                                <strong>Ежедневно:</strong> отчет каждый день<br>
+                                <strong>Ежемесячно:</strong> отчет 1 числа каждого месяца
+                            </small>
                         </div>
                         <div class="mb-3" id="weeklyDaysContainer" style="display: none;">
                             <label class="form-label">Дни недели для отчетов</label>
+                            <small class="form-text text-muted mb-2">
+                                Выберите дни, когда хотите получать отчеты. Например, только суббота или суббота + воскресенье.
+                            </small>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-check">
