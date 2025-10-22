@@ -275,6 +275,11 @@
                     </button>
                 </div>
                 <div class="col-md-2">
+                    <button class="btn btn-info btn-lg w-100" onclick="showWarehousesList()">
+                        <i class="fas fa-warehouse me-2"></i>Управление складами
+                    </button>
+                </div>
+                <div class="col-md-2">
                     <button class="btn btn-success btn-lg w-100" onclick="showAddManagerModal()">
                         <i class="fas fa-user-plus me-2"></i>Добавить руководителя
                     </button>
@@ -292,11 +297,6 @@
                 <div class="col-md-2">
                     <button class="btn btn-secondary btn-lg w-100" onclick="showReportsModal()">
                         <i class="fas fa-chart-bar me-2"></i>Отчеты
-                    </button>
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-dark btn-lg w-100" onclick="showNotificationsModal()">
-                        <i class="fas fa-bell me-2"></i>Уведомления
                     </button>
                 </div>
             </div>
@@ -613,6 +613,45 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
                     <button type="button" class="btn btn-primary" onclick="updateEmployee()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно списка складов -->
+    <div class="modal fade" id="warehousesListModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Управление складами</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <button class="btn btn-primary" onclick="showAddWarehouseModal()">
+                            <i class="fas fa-plus me-2"></i>Добавить склад
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Название</th>
+                                    <th>Адрес</th>
+                                    <th>Телефон</th>
+                                    <th>Chat ID</th>
+                                    <th>Сотрудников</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="warehousesList">
+                                <!-- Список складов будет здесь -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
                 </div>
             </div>
         </div>
@@ -1787,6 +1826,220 @@
             });
             
             modal.show();
+        }
+
+        function showWarehousesList() {
+            if (currentUser.role !== 'admin') {
+                showNotification('У вас нет прав для просмотра списка складов', 'error');
+                return;
+            }
+            const modal = new bootstrap.Modal(document.getElementById('warehousesListModal'));
+            const tbody = document.getElementById('warehousesList');
+            tbody.innerHTML = '';
+            
+            warehouses.forEach(warehouse => {
+                const employeeCount = employees.filter(e => e.warehouse_id === warehouse.id).length;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${warehouse.name}</td>
+                    <td>${warehouse.address || 'Не указан'}</td>
+                    <td>${warehouse.phone || 'Не указан'}</td>
+                    <td>${warehouse.chat_id || 'Не настроен'}</td>
+                    <td>${employeeCount}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" onclick="editWarehouse('${warehouse.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteWarehouse('${warehouse.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            modal.show();
+        }
+
+        // Отображение складов
+        function displayWarehouses() {
+            const contentArea = document.getElementById('contentArea');
+            if (!contentArea) return;
+
+            let html = '<div class="row">';
+            
+            warehouses.forEach(warehouse => {
+                const warehouseEmployees = employees.filter(emp => emp.warehouse_id === warehouse.id);
+                let expiredCount = 0;
+                let warningCount = 0;
+                
+                warehouseEmployees.forEach(employee => {
+                    ['medical_date', 'sanitary_date', 'fluorography_date'].forEach(dateField => {
+                        const status = getDocumentStatus(employee[dateField]);
+                        if (status.status === 'expired') expiredCount++;
+                        if (status.status === 'warning') warningCount++;
+                    });
+                });
+
+                html += `
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-warehouse me-2"></i>${warehouse.name}
+                                </h5>
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-outline-warning" onclick="editWarehouse('${warehouse.id}')" title="Редактировать">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteWarehouse('${warehouse.id}')" title="Удалить">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <i class="fas fa-map-marker-alt me-1"></i>${warehouse.address || 'Адрес не указан'}<br>
+                                    <i class="fas fa-phone me-1"></i>${warehouse.phone || 'Телефон не указан'}<br>
+                                    <i class="fab fa-telegram me-1"></i>Chat ID: ${warehouse.chat_id || 'Не настроен'}
+                                </p>
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <div class="badge bg-primary fs-6">${warehouseEmployees.length}</div>
+                                        <div class="small text-muted">Сотрудников</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="badge bg-danger fs-6">${expiredCount}</div>
+                                        <div class="small text-muted">Просрочено</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="badge bg-warning fs-6">${warningCount}</div>
+                                        <div class="small text-muted">Предупреждение</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button class="btn btn-primary w-100" onclick="showWarehouseEmployees('${warehouse.id}')">
+                                    <i class="fas fa-users me-2"></i>Просмотр сотрудников
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            contentArea.innerHTML = html;
+        }
+
+        // Показать сотрудников склада
+        function showWarehouseEmployees(warehouseId) {
+            const warehouse = warehouses.find(w => w.id === warehouseId);
+            if (!warehouse) return;
+
+            const warehouseEmployees = employees.filter(emp => emp.warehouse_id === warehouseId);
+            const contentArea = document.getElementById('contentArea');
+            
+            let html = `
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4><i class="fas fa-warehouse me-2"></i>Склад: ${warehouse.name}</h4>
+                    <button class="btn btn-primary" onclick="displayWarehouses()">
+                        <i class="fas fa-arrow-left me-2"></i>Назад к складам
+                    </button>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <button class="btn btn-success w-100" onclick="showAddEmployeeModal()">
+                            <i class="fas fa-user-plus me-2"></i>Добавить сотрудника
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-warning w-100" onclick="showBulkAddModal()">
+                            <i class="fas fa-users me-2"></i>Массовое добавление
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-info w-100" onclick="showReportsModal()">
+                            <i class="fas fa-chart-bar me-2"></i>Отчеты
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            if (warehouseEmployees.length === 0) {
+                html += `
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        В этом складе пока нет сотрудников
+                    </div>
+                `;
+            } else {
+                html += '<div class="row">';
+                warehouseEmployees.forEach(employee => {
+                    const medicalStatus = getDocumentStatus(employee.medical_date);
+                    const sanitaryStatus = getDocumentStatus(employee.sanitary_date);
+                    const fluorographyStatus = getDocumentStatus(employee.fluorography_date);
+                    
+                    html += `
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">${employee.name}</h6>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-warning" onclick="editEmployee('${employee.id}')" title="Редактировать">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteEmployee('${employee.id}')" title="Удалить">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <small class="text-muted">Медосмотр:</small><br>
+                                        <span class="badge bg-${medicalStatus.status === 'expired' ? 'danger' : medicalStatus.status === 'warning' ? 'warning' : 'success'}">
+                                            ${employee.medical_date || 'Не указан'}
+                                        </span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Сан.минимум:</small><br>
+                                        <span class="badge bg-${sanitaryStatus.status === 'expired' ? 'danger' : sanitaryStatus.status === 'warning' ? 'warning' : 'success'}">
+                                            ${employee.sanitary_date || 'Не указан'}
+                                        </span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Флюорография:</small><br>
+                                        <span class="badge bg-${fluorographyStatus.status === 'expired' ? 'danger' : fluorographyStatus.status === 'warning' ? 'warning' : 'success'}">
+                                            ${employee.fluorography_date || 'Не указан'}
+                                        </span>
+                                    </div>
+                                    ${employee.telegram ? `<div><small class="text-muted">Telegram:</small><br>${employee.telegram}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            contentArea.innerHTML = html;
+        }
+
+        // Получить статус документа
+        function getDocumentStatus(dateStr) {
+            if (!dateStr) return { status: 'none', days: 0 };
+            
+            const today = new Date();
+            const docDate = new Date(dateStr);
+            const diffDays = Math.ceil((docDate - today) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) {
+                return { status: 'expired', days: Math.abs(diffDays) };
+            } else if (diffDays <= settings.warningDays) {
+                return { status: 'warning', days: diffDays };
+            } else {
+                return { status: 'valid', days: diffDays };
+            }
         }
 
         // Добавление склада
