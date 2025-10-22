@@ -303,19 +303,24 @@
 
             <!-- Кнопки для руководителя -->
             <div id="managerControls" class="row mb-4" style="display: none;">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <button class="btn btn-success btn-lg w-100" onclick="showAddEmployeeModal()">
                         <i class="fas fa-user-plus me-2"></i>Добавить сотрудника
                     </button>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <button class="btn btn-warning btn-lg w-100" onclick="showBulkAddModal()">
                         <i class="fas fa-users me-2"></i>Массовое добавление
                     </button>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <button class="btn btn-info btn-lg w-100" onclick="showReportsModal()">
                         <i class="fas fa-chart-bar me-2"></i>Отчеты
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-dark btn-lg w-100" onclick="showManagerSettingsModal()">
+                        <i class="fas fa-cog me-2"></i>Мои настройки
                     </button>
                 </div>
             </div>
@@ -772,6 +777,63 @@
         </div>
     </div>
 
+    <!-- Модальное окно настроек руководителя -->
+    <div class="modal fade" id="managerSettingsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Мои настройки</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="managerSettingsForm">
+                        <div class="mb-3">
+                            <label class="form-label">Дней до предупреждения</label>
+                            <input type="number" class="form-control" id="managerWarningDays" value="15" min="1" max="90">
+                            <small class="form-text text-muted">За сколько дней до истечения документов получать уведомления</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Время отправки уведомлений</label>
+                            <input type="time" class="form-control" id="managerNotificationTime" value="09:00">
+                            <small class="form-text text-muted">В какое время получать ежедневные уведомления</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Автоматические уведомления</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="managerAutoNotifications" checked>
+                                <label class="form-check-label" for="managerAutoNotifications">
+                                    Включить автоматические уведомления для моего склада
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email для уведомлений</label>
+                            <input type="email" class="form-control" id="managerNotificationEmail" placeholder="manager@example.com">
+                            <small class="form-text text-muted">Email для получения уведомлений о просроченных документах</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Telegram для уведомлений</label>
+                            <input type="text" class="form-control" id="managerTelegramNotification" placeholder="@username">
+                            <small class="form-text text-muted">Telegram для получения уведомлений (опционально)</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Частота отчетов</label>
+                            <select class="form-control" id="managerReportFrequency">
+                                <option value="daily">Ежедневно</option>
+                                <option value="weekly" selected>Еженедельно</option>
+                                <option value="monthly">Ежемесячно</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="saveManagerSettings()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Уведомления -->
     <div id="notifications" class="position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
 
@@ -1191,8 +1253,11 @@
                 // Обновляем информацию о пользователе
                 const userInfoElement = document.getElementById('userInfo');
                 if (userInfoElement) {
+                    const warehouseName = currentUser.role === 'manager' ? 
+                        warehouses.find(w => w.id === currentUser.warehouse_id)?.name || 'Неизвестный склад' : 
+                        'Система';
                     userInfoElement.textContent = 
-                        `Добро пожаловать, ${currentUser.name} (${currentUser.role === 'admin' ? 'Администратор' : 'Руководитель'})`;
+                        `Добро пожаловать, ${currentUser.name} (${currentUser.role === 'admin' ? 'Администратор' : 'Руководитель склада: ' + warehouseName})`;
                     console.log('Информация о пользователе обновлена');
                 }
                 
@@ -1543,11 +1608,19 @@
 
         // Модальные окна
         function showAddWarehouseModal() {
+            if (currentUser.role !== 'admin') {
+                showNotification('У вас нет прав для добавления складов', 'error');
+                return;
+            }
             const modal = new bootstrap.Modal(document.getElementById('addWarehouseModal'));
             modal.show();
         }
 
         function showAddManagerModal() {
+            if (currentUser.role !== 'admin') {
+                showNotification('У вас нет прав для добавления руководителей', 'error');
+                return;
+            }
             const select = document.getElementById('managerWarehouse');
             select.innerHTML = '<option value="">Выберите склад</option>';
             
@@ -1652,6 +1725,10 @@
 
         // Редактирование склада
         function editWarehouse(warehouseId) {
+            if (currentUser.role !== 'admin') {
+                showNotification('У вас нет прав для редактирования складов', 'error');
+                return;
+            }
             const warehouse = warehouses.find(w => w.id === warehouseId);
             if (!warehouse) return;
 
@@ -2345,6 +2422,10 @@
 
         // Удаление
         function deleteWarehouse(warehouseId) {
+            if (currentUser.role !== 'admin') {
+                showNotification('У вас нет прав для удаления складов', 'error');
+                return;
+            }
             if (confirm('Вы уверены, что хотите удалить этот склад? Все сотрудники также будут удалены.')) {
                 warehouses = warehouses.filter(w => w.id !== warehouseId);
                 employees = employees.filter(e => e.warehouse_id !== warehouseId);
@@ -2358,6 +2439,15 @@
         }
 
         function deleteEmployee(employeeId) {
+            const employee = employees.find(e => e.id === employeeId);
+            if (!employee) return;
+            
+            // Проверяем права доступа
+            if (currentUser.role === 'manager' && employee.warehouse_id !== currentUser.warehouse_id) {
+                showNotification('Вы можете удалять только сотрудников своего склада', 'error');
+                return;
+            }
+            
             if (confirm('Вы уверены, что хотите удалить этого сотрудника?')) {
                 employees = employees.filter(e => e.id !== employeeId);
                 saveData();
@@ -2374,6 +2464,10 @@
         }
 
         function deleteManager(managerId) {
+            if (currentUser.role !== 'admin') {
+                showNotification('У вас нет прав для удаления руководителей', 'error');
+                return;
+            }
             if (confirm('Вы уверены, что хотите удалить этого руководителя?')) {
                 managers = managers.filter(m => m.id !== managerId);
                 saveData();
@@ -2381,6 +2475,90 @@
                 showManagersList();
                 showNotification('Руководитель удален!', 'success');
             }
+        }
+
+        // Настройки руководителя
+        function showManagerSettingsModal() {
+            const modal = new bootstrap.Modal(document.getElementById('managerSettingsModal'));
+            
+            // Загружаем текущие настройки руководителя
+            const managerSettings = JSON.parse(localStorage.getItem('manager_settings_' + currentUser.id) || '{}');
+            
+            document.getElementById('managerWarningDays').value = managerSettings.warningDays || 15;
+            document.getElementById('managerNotificationTime').value = managerSettings.notificationTime || '09:00';
+            document.getElementById('managerAutoNotifications').checked = managerSettings.autoNotifications !== false;
+            document.getElementById('managerNotificationEmail').value = managerSettings.notificationEmail || '';
+            document.getElementById('managerTelegramNotification').value = managerSettings.telegramNotification || '';
+            document.getElementById('managerReportFrequency').value = managerSettings.reportFrequency || 'weekly';
+            
+            modal.show();
+        }
+
+        function saveManagerSettings() {
+            const settings = {
+                warningDays: parseInt(document.getElementById('managerWarningDays').value),
+                notificationTime: document.getElementById('managerNotificationTime').value,
+                autoNotifications: document.getElementById('managerAutoNotifications').checked,
+                notificationEmail: document.getElementById('managerNotificationEmail').value.trim(),
+                telegramNotification: document.getElementById('managerTelegramNotification').value.trim(),
+                reportFrequency: document.getElementById('managerReportFrequency').value,
+                saved_at: new Date().toISOString()
+            };
+            
+            // Сохраняем настройки для конкретного руководителя
+            localStorage.setItem('manager_settings_' + currentUser.id, JSON.stringify(settings));
+            
+            // Обновляем глобальные настройки для этого руководителя
+            const globalSettings = JSON.parse(localStorage.getItem('settings') || '{}');
+            globalSettings['manager_' + currentUser.id] = settings;
+            localStorage.setItem('settings', JSON.stringify(globalSettings));
+            
+            showNotification('Настройки сохранены!', 'success');
+            
+            // Закрываем модальное окно
+            const modal = bootstrap.Modal.getInstance(document.getElementById('managerSettingsModal'));
+            modal.hide();
+        }
+
+        // Получить настройки руководителя
+        function getManagerSettings(managerId) {
+            const settings = JSON.parse(localStorage.getItem('manager_settings_' + managerId) || '{}');
+            return {
+                warningDays: settings.warningDays || 15,
+                notificationTime: settings.notificationTime || '09:00',
+                autoNotifications: settings.autoNotifications !== false,
+                notificationEmail: settings.notificationEmail || '',
+                telegramNotification: settings.telegramNotification || '',
+                reportFrequency: settings.reportFrequency || 'weekly'
+            };
+        }
+
+        // Отправка уведомления руководителю
+        function sendManagerNotification(managerId, message) {
+            const manager = managers.find(m => m.id === managerId);
+            if (!manager) return false;
+            
+            const settings = getManagerSettings(managerId);
+            
+            // Проверяем, включены ли уведомления
+            if (!settings.autoNotifications) {
+                console.log(`Уведомления отключены для руководителя ${manager.name}`);
+                return false;
+            }
+            
+            // Отправляем уведомление
+            console.log(`Отправка уведомления руководителю ${manager.name}: ${message}`);
+            
+            // Здесь можно добавить реальную отправку через Email/Telegram API
+            if (settings.notificationEmail) {
+                console.log(`Email уведомление на ${settings.notificationEmail}: ${message}`);
+            }
+            
+            if (settings.telegramNotification) {
+                console.log(`Telegram уведомление на ${settings.telegramNotification}: ${message}`);
+            }
+            
+            return true;
         }
 
         // Показать ошибку
