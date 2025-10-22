@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Система управления медкнижками - ИСПРАВЛЕННАЯ ВЕРСИЯ</title>
+    <title>Система управления медкнижками - Полная версия</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -113,14 +113,6 @@
         .ok-employee {
             border-left: 4px solid #28a745;
         }
-        .help-text {
-            font-size: 0.85em;
-            color: #6c757d;
-            margin-top: 15px;
-            padding: 10px;
-            background: rgba(108, 117, 125, 0.1);
-            border-radius: 8px;
-        }
         .login-button {
             cursor: pointer;
             transition: all 0.3s ease;
@@ -132,27 +124,9 @@
         .login-button:active {
             transform: translateY(0);
         }
-        .debug-info {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: monospace;
-            font-size: 12px;
-            z-index: 10000;
-            max-width: 300px;
-        }
     </style>
 </head>
 <body>
-    <!-- Отладочная информация -->
-    <div id="debugInfo" class="debug-info" style="display: none;">
-        <div id="debugContent"></div>
-    </div>
-
     <!-- Экран входа -->
     <div id="loginScreen" class="d-flex align-items-center justify-content-center min-vh-100">
         <div class="login-container">
@@ -170,17 +144,17 @@
                     <label class="form-label">Пароль</label>
                     <input type="password" class="form-control" id="password" required>
                 </div>
-                <button type="button" class="btn btn-primary w-100 login-button" id="loginButton" onclick="handleLogin()">
-                    Войти
-                </button>
+                <button type="button" class="btn btn-primary w-100 login-button" id="loginButton" onclick="handleLogin()">Войти</button>
             </form>
             
             <div id="errorMessage" class="alert alert-danger mt-3" style="display: none;"></div>
             
-            <div class="help-text">
-                <i class="fas fa-info-circle me-2"></i>
-                <strong>Нужна помощь?</strong><br>
-                Обратитесь к системному администратору для получения доступа к системе.
+            <div class="mt-4 text-center">
+                <small class="text-muted">
+                    <strong>Тестовые доступы:</strong><br>
+                    Администратор: admin / admin123<br>
+                    Руководитель: manager / manager123
+                </small>
             </div>
         </div>
     </div>
@@ -332,6 +306,441 @@
         </div>
     </div>
 
+    <!-- Модальные окна -->
+    <!-- Модальное окно добавления склада -->
+    <div class="modal fade" id="addWarehouseModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Добавить склад</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addWarehouseForm">
+                        <div class="mb-3">
+                            <label class="form-label">Название склада</label>
+                            <input type="text" class="form-control" id="warehouseName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Описание</label>
+                            <textarea class="form-control" id="warehouseDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Адрес</label>
+                            <input type="text" class="form-control" id="warehouseAddress">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Телефон</label>
+                            <input type="text" class="form-control" id="warehousePhone">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="addWarehouse()">Добавить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования склада -->
+    <div class="modal fade" id="editWarehouseModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактировать склад</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editWarehouseForm">
+                        <input type="hidden" id="editWarehouseId">
+                        <div class="mb-3">
+                            <label class="form-label">Название склада</label>
+                            <input type="text" class="form-control" id="editWarehouseName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Описание</label>
+                            <textarea class="form-control" id="editWarehouseDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Адрес</label>
+                            <input type="text" class="form-control" id="editWarehouseAddress">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Телефон</label>
+                            <input type="text" class="form-control" id="editWarehousePhone">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="updateWarehouse()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления руководителя -->
+    <div class="modal fade" id="addManagerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Добавить руководителя</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addManagerForm">
+                        <div class="mb-3">
+                            <label class="form-label">Логин</label>
+                            <input type="text" class="form-control" id="managerLogin" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Пароль</label>
+                            <input type="password" class="form-control" id="managerPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ФИО</label>
+                            <input type="text" class="form-control" id="managerName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Telegram</label>
+                            <input type="text" class="form-control" id="managerTelegram">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="managerEmail">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Телефон</label>
+                            <input type="text" class="form-control" id="managerPhone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Склад</label>
+                            <select class="form-control" id="managerWarehouse" required>
+                                <option value="">Выберите склад</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="addManager()">Добавить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования руководителя -->
+    <div class="modal fade" id="editManagerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактировать руководителя</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editManagerForm">
+                        <input type="hidden" id="editManagerId">
+                        <div class="mb-3">
+                            <label class="form-label">Логин</label>
+                            <input type="text" class="form-control" id="editManagerLogin" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Новый пароль (оставьте пустым, если не меняете)</label>
+                            <input type="password" class="form-control" id="editManagerPassword">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ФИО</label>
+                            <input type="text" class="form-control" id="editManagerName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Telegram</label>
+                            <input type="text" class="form-control" id="editManagerTelegram">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editManagerEmail">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Телефон</label>
+                            <input type="text" class="form-control" id="editManagerPhone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Склад</label>
+                            <select class="form-control" id="editManagerWarehouse" required>
+                                <option value="">Выберите склад</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="updateManager()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления сотрудника -->
+    <div class="modal fade" id="addEmployeeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Добавить сотрудника</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addEmployeeForm">
+                        <div class="mb-3">
+                            <label class="form-label">Склад</label>
+                            <select class="form-control" id="employeeWarehouse" required>
+                                <option value="">Выберите склад</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ФИО сотрудника</label>
+                            <input type="text" class="form-control" id="employeeName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Должность</label>
+                            <input type="text" class="form-control" id="employeePosition">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата медосмотра</label>
+                            <input type="date" class="form-control" id="employeeMedicalDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата сан.минимума</label>
+                            <input type="date" class="form-control" id="employeeSanitaryDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата флюорографии</label>
+                            <input type="date" class="form-control" id="employeeFluorographyDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Telegram</label>
+                            <input type="text" class="form-control" id="employeeTelegram">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Телефон</label>
+                            <input type="text" class="form-control" id="employeePhone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="employeeEmail">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="addEmployee()">Добавить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования сотрудника -->
+    <div class="modal fade" id="editEmployeeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактировать сотрудника</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editEmployeeForm">
+                        <input type="hidden" id="editEmployeeId">
+                        <div class="mb-3">
+                            <label class="form-label">Склад</label>
+                            <select class="form-control" id="editEmployeeWarehouse" required>
+                                <option value="">Выберите склад</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ФИО сотрудника</label>
+                            <input type="text" class="form-control" id="editEmployeeName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Должность</label>
+                            <input type="text" class="form-control" id="editEmployeePosition">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата медосмотра</label>
+                            <input type="date" class="form-control" id="editEmployeeMedicalDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата сан.минимума</label>
+                            <input type="date" class="form-control" id="editEmployeeSanitaryDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата флюорографии</label>
+                            <input type="date" class="form-control" id="editEmployeeFluorographyDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Telegram</label>
+                            <input type="text" class="form-control" id="editEmployeeTelegram">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Телефон</label>
+                            <input type="text" class="form-control" id="editEmployeePhone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editEmployeeEmail">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="updateEmployee()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно массового добавления -->
+    <div class="modal fade" id="bulkAddModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Массовое добавление сотрудников</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="bulkAddForm">
+                        <div class="mb-3">
+                            <label class="form-label">Склад</label>
+                            <select class="form-control" id="bulkWarehouse" required>
+                                <option value="">Выберите склад</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Список ФИО (по одному на строку)</label>
+                            <textarea class="form-control" id="bulkNames" rows="10" placeholder="Иванов Иван Иванович&#10;Петров Петр Петрович&#10;Сидоров Сидор Сидорович"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Должность (для всех)</label>
+                            <input type="text" class="form-control" id="bulkPosition" placeholder="Сотрудник склада">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="bulkAddEmployees()">Добавить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно отчетов -->
+    <div class="modal fade" id="reportsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Отчеты и аналитика</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Статистика по складам</h6>
+                            <div id="warehouseStats" class="mb-3"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Статистика по документам</h6>
+                            <div id="documentStats" class="mb-3"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h6>Список просроченных документов</h6>
+                            <div id="expiredList" class="mb-3"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h6>Список документов с предупреждением</h6>
+                            <div id="warningList" class="mb-3"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    <button type="button" class="btn btn-primary" onclick="exportReport()">Экспорт отчета</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно настроек -->
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Настройки системы</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="settingsForm">
+                        <div class="mb-3">
+                            <label class="form-label">Дней до предупреждения</label>
+                            <input type="number" class="form-control" id="warningDays" value="15" min="1" max="90">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Время отправки уведомлений</label>
+                            <input type="time" class="form-control" id="notificationTime" value="09:00">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Автоматические уведомления</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="autoNotifications" checked>
+                                <label class="form-check-label" for="autoNotifications">
+                                    Включить автоматические уведомления
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email для уведомлений</label>
+                            <input type="email" class="form-control" id="notificationEmail">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSettings()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно уведомлений -->
+    <div class="modal fade" id="notificationsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Уведомления</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <button class="btn btn-primary" onclick="sendTestNotification()">
+                            <i class="fas fa-paper-plane me-2"></i>Отправить тестовое уведомление
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <h6>История уведомлений</h6>
+                        <div id="notificationHistory" class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                            <!-- История уведомлений будет здесь -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Уведомления -->
     <div id="notifications" class="position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
 
@@ -349,27 +758,137 @@
             notificationEmail: ''
         };
 
-        // Функция отладки
-        function debugLog(message) {
-            console.log(message);
-            const debugInfo = document.getElementById('debugInfo');
-            const debugContent = document.getElementById('debugContent');
-            if (debugInfo && debugContent) {
-                debugInfo.style.display = 'block';
-                debugContent.innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Страница загружена, инициализация...');
+            loadData();
+            loadSettings();
+            checkAuth();
+            setupLoginForm();
+            setupSearchAndFilters();
+        });
+
+        // Настройка поиска и фильтров
+        function setupSearchAndFilters() {
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const warehouseFilter = document.getElementById('warehouseFilter');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', filterContent);
+            }
+            if (statusFilter) {
+                statusFilter.addEventListener('change', filterContent);
+            }
+            if (warehouseFilter) {
+                warehouseFilter.addEventListener('change', filterContent);
             }
         }
 
-        // Обработка входа - МАКСИМАЛЬНО ПРОСТАЯ ВЕРСИЯ
+        // Фильтрация контента
+        function filterContent() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const warehouseFilter = document.getElementById('warehouseFilter').value;
+
+            // Обновляем отображение в зависимости от роли пользователя
+            if (currentUser.role === 'admin') {
+                displayWarehouses();
+            } else {
+                displayManagerWarehouse();
+            }
+        }
+
+        // Загрузка настроек
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('medical_settings');
+            if (savedSettings) {
+                settings = { ...settings, ...JSON.parse(savedSettings) };
+            }
+        }
+
+        // Сохранение настроек
+        function saveSettings() {
+            settings.warningDays = parseInt(document.getElementById('warningDays').value);
+            settings.notificationTime = document.getElementById('notificationTime').value;
+            settings.autoNotifications = document.getElementById('autoNotifications').checked;
+            settings.notificationEmail = document.getElementById('notificationEmail').value;
+
+            localStorage.setItem('medical_settings', JSON.stringify(settings));
+            showNotification('Настройки сохранены!', 'success');
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
+            modal.hide();
+        }
+
+        // Показать настройки
+        function showSettings() {
+            document.getElementById('warningDays').value = settings.warningDays;
+            document.getElementById('notificationTime').value = settings.notificationTime;
+            document.getElementById('autoNotifications').checked = settings.autoNotifications;
+            document.getElementById('notificationEmail').value = settings.notificationEmail;
+
+            const modal = new bootstrap.Modal(document.getElementById('settingsModal'));
+            modal.show();
+        }
+
+        // Настройка формы входа
+        function setupLoginForm() {
+            console.log('Настройка формы входа...');
+            
+            // Добавляем обработчик на кнопку
+            const loginButton = document.getElementById('loginButton');
+            if (loginButton) {
+                loginButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Кнопка входа нажата');
+                    handleLogin();
+                });
+            }
+            
+            // Добавляем обработчик на форму
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('Форма отправлена');
+                    handleLogin();
+                });
+            }
+            
+            // Добавляем обработчик на Enter в полях
+            const usernameField = document.getElementById('username');
+            const passwordField = document.getElementById('password');
+            
+            if (usernameField) {
+                usernameField.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleLogin();
+                    }
+                });
+            }
+            
+            if (passwordField) {
+                passwordField.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleLogin();
+                    }
+                });
+            }
+        }
+
+        // Обработка входа - ИСПРАВЛЕННАЯ ВЕРСИЯ
         function handleLogin() {
-            debugLog('=== НАЧАЛО ОБРАБОТКИ ВХОДА ===');
+            console.log('=== НАЧАЛО ОБРАБОТКИ ВХОДА ===');
             
             try {
                 const usernameElement = document.getElementById('username');
                 const passwordElement = document.getElementById('password');
                 
                 if (!usernameElement || !passwordElement) {
-                    debugLog('❌ Элементы формы не найдены!');
+                    console.error('Элементы формы не найдены!');
                     alert('Ошибка: элементы формы не найдены');
                     return;
                 }
@@ -377,17 +896,17 @@
                 const username = usernameElement.value.trim();
                 const password = passwordElement.value.trim();
                 
-                debugLog('Логин: ' + username + ', Пароль: ' + password);
+                console.log('Логин:', username, 'Пароль:', password);
                 
                 if (!username || !password) {
-                    debugLog('❌ Пустые поля');
+                    console.log('Пустые поля');
                     showError('Введите логин и пароль');
                     return;
                 }
                 
                 // Проверяем администратора
                 if (username === 'admin' && password === 'admin123') {
-                    debugLog('✅ Администратор найден!');
+                    console.log('✅ Администратор найден, создаем пользователя...');
                     currentUser = {
                         id: 'admin',
                         login: 'admin',
@@ -396,19 +915,19 @@
                         warehouse_id: null
                     };
                     
-                    debugLog('Сохраняем пользователя...');
+                    console.log('Сохраняем пользователя в localStorage...');
                     localStorage.setItem('current_user', JSON.stringify(currentUser));
                     
-                    debugLog('Показываем основной экран...');
+                    console.log('Вызываем showMainScreen...');
                     showMainScreen();
-                    debugLog('=== ВХОД ЗАВЕРШЕН УСПЕШНО ===');
+                    console.log('=== ВХОД ЗАВЕРШЕН УСПЕШНО ===');
                     return;
                 }
                 
                 // Проверяем руководителей
                 const manager = managers.find(m => m.login === username && m.password === password);
                 if (manager) {
-                    debugLog('✅ Руководитель найден: ' + manager.name);
+                    console.log('✅ Руководитель найден:', manager.name);
                     currentUser = {
                         id: manager.id,
                         login: manager.login,
@@ -418,85 +937,22 @@
                     };
                     localStorage.setItem('current_user', JSON.stringify(currentUser));
                     showMainScreen();
-                    debugLog('=== ВХОД РУКОВОДИТЕЛЯ ЗАВЕРШЕН ===');
+                    console.log('=== ВХОД РУКОВОДИТЕЛЯ ЗАВЕРШЕН ===');
                     return;
                 }
                 
-                debugLog('❌ Неверные данные для входа');
+                console.log('❌ Неверные данные для входа');
                 showError('Неверный логин или пароль');
                 
             } catch (error) {
-                debugLog('❌ Ошибка при входе: ' + error.message);
+                console.error('Ошибка при входе:', error);
                 alert('Произошла ошибка при входе: ' + error.message);
-            }
-        }
-
-        // Показать основной экран
-        function showMainScreen() {
-            debugLog('=== НАЧАЛО showMainScreen ===');
-            
-            try {
-                const loginScreen = document.getElementById('loginScreen');
-                const mainScreen = document.getElementById('mainScreen');
-                
-                if (!loginScreen || !mainScreen) {
-                    debugLog('❌ Элементы экранов не найдены!');
-                    alert('Ошибка: элементы экранов не найдены');
-                    return;
-                }
-                
-                debugLog('Скрываем экран входа...');
-                loginScreen.style.display = 'none';
-                debugLog('Показываем основной экран...');
-                mainScreen.style.display = 'block';
-                
-                // Обновляем информацию о пользователе
-                const userInfoElement = document.getElementById('userInfo');
-                if (userInfoElement) {
-                    userInfoElement.textContent = 
-                        `Добро пожаловать, ${currentUser.name} (${currentUser.role === 'admin' ? 'Администратор' : 'Руководитель'})`;
-                    debugLog('Информация о пользователе обновлена');
-                }
-                
-                // Показываем соответствующие кнопки
-                if (currentUser.role === 'admin') {
-                    debugLog('Настраиваем интерфейс администратора...');
-                    const adminControls = document.getElementById('adminControls');
-                    const managerControls = document.getElementById('managerControls');
-                    
-                    if (adminControls) adminControls.style.display = 'block';
-                    if (managerControls) managerControls.style.display = 'none';
-                    
-                    debugLog('Вызываем displayWarehouses...');
-                    displayWarehouses();
-                } else {
-                    debugLog('Настраиваем интерфейс руководителя...');
-                    const adminControls = document.getElementById('adminControls');
-                    const managerControls = document.getElementById('managerControls');
-                    
-                    if (adminControls) adminControls.style.display = 'none';
-                    if (managerControls) managerControls.style.display = 'block';
-                    
-                    debugLog('Вызываем displayManagerWarehouse...');
-                    displayManagerWarehouse();
-                }
-                
-                debugLog('Обновляем статистику...');
-                updateStatistics();
-                debugLog('Обновляем фильтр складов...');
-                updateWarehouseFilter();
-                
-                debugLog('=== showMainScreen ЗАВЕРШЕН УСПЕШНО ===');
-                
-            } catch (error) {
-                debugLog('❌ Ошибка в showMainScreen: ' + error.message);
-                alert('Ошибка при показе основного экрана: ' + error.message);
             }
         }
 
         // Загрузка данных из localStorage
         function loadData() {
-            debugLog('Загрузка данных...');
+            console.log('Загрузка данных...');
             
             const savedWarehouses = localStorage.getItem('medical_warehouses');
             const savedEmployees = localStorage.getItem('medical_employees');
@@ -595,7 +1051,7 @@
             
             saveData();
             updateWarehouseFilter();
-            debugLog('Данные загружены: складов=' + warehouses.length + ', сотрудников=' + employees.length + ', руководителей=' + managers.length);
+            console.log('Данные загружены:', { warehouses: warehouses.length, employees: employees.length, managers: managers.length });
         }
 
         // Обновление фильтра складов
@@ -627,28 +1083,53 @@
 
         // Проверка аутентификации
         function checkAuth() {
-            debugLog('Проверка аутентификации...');
+            console.log('Проверка аутентификации...');
             const savedUser = localStorage.getItem('current_user');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
-                debugLog('Пользователь найден: ' + currentUser.name);
+                console.log('Пользователь найден:', currentUser.name);
                 showMainScreen();
             } else {
-                debugLog('Пользователь не найден, показываем экран входа');
+                console.log('Пользователь не найден, показываем экран входа');
                 showLoginScreen();
             }
         }
 
         // Показать экран входа
         function showLoginScreen() {
-            debugLog('Показываем экран входа');
+            console.log('Показываем экран входа');
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('mainScreen').style.display = 'none';
         }
 
+        // Показать основной экран
+        function showMainScreen() {
+            console.log('Показываем основной экран для:', currentUser.name);
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainScreen').style.display = 'block';
+            
+            // Обновляем информацию о пользователе
+            document.getElementById('userInfo').textContent = 
+                `Добро пожаловать, ${currentUser.name} (${currentUser.role === 'admin' ? 'Администратор' : 'Руководитель'})`;
+            
+            // Показываем соответствующие кнопки
+            if (currentUser.role === 'admin') {
+                document.getElementById('adminControls').style.display = 'block';
+                document.getElementById('managerControls').style.display = 'none';
+                displayWarehouses();
+            } else {
+                document.getElementById('adminControls').style.display = 'none';
+                document.getElementById('managerControls').style.display = 'block';
+                displayManagerWarehouse();
+            }
+            
+            updateStatistics();
+            updateWarehouseFilter();
+        }
+
         // Выход из системы
         function logout() {
-            debugLog('Выход из системы');
+            console.log('Выход из системы');
             localStorage.removeItem('current_user');
             currentUser = null;
             showLoginScreen();
@@ -837,28 +1318,847 @@
             });
         }
 
-        // Заглушки для остальных функций
-        function showEmployees(warehouseId) { debugLog('showEmployees: ' + warehouseId); }
-        function editWarehouse(warehouseId) { debugLog('editWarehouse: ' + warehouseId); }
-        function deleteWarehouse(warehouseId) { debugLog('deleteWarehouse: ' + warehouseId); }
-        function editEmployee(employeeId) { debugLog('editEmployee: ' + employeeId); }
-        function deleteEmployee(employeeId) { debugLog('deleteEmployee: ' + employeeId); }
-        function showAddWarehouseModal() { debugLog('showAddWarehouseModal'); }
-        function showAddManagerModal() { debugLog('showAddManagerModal'); }
-        function showManagersList() { debugLog('showManagersList'); }
-        function showBulkAddModal() { debugLog('showBulkAddModal'); }
-        function showReportsModal() { debugLog('showReportsModal'); }
-        function showNotificationsModal() { debugLog('showNotificationsModal'); }
-        function showAddEmployeeModal() { debugLog('showAddEmployeeModal'); }
-        function exportData() { debugLog('exportData'); }
-        function showSettings() { debugLog('showSettings'); }
+        // Показать сотрудников склада
+        function showEmployees(warehouseId) {
+            const warehouse = warehouses.find(w => w.id === warehouseId);
+            const warehouseEmployees = employees.filter(emp => emp.warehouse_id === warehouseId);
+            
+            const container = document.getElementById('contentArea');
+            container.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4>Сотрудники склада: ${warehouse.name}</h4>
+                    <button class="btn btn-secondary" onclick="displayWarehouses()">
+                        <i class="fas fa-arrow-left"></i> Назад к складам
+                    </button>
+                </div>
+            `;
+            
+            if (warehouseEmployees.length === 0) {
+                container.innerHTML += '<div class="alert alert-info">Нет сотрудников в этом складе.</div>';
+                return;
+            }
+            
+            warehouseEmployees.forEach(employee => {
+                const medicalStatus = getDocumentStatus(employee.medical_date);
+                const sanitaryStatus = getDocumentStatus(employee.sanitary_date);
+                const fluorographyStatus = getDocumentStatus(employee.fluorography_date);
+                
+                // Определяем общий статус сотрудника
+                let cardClass = 'card mb-2 employee-card';
+                if (medicalStatus.status === 'expired' || sanitaryStatus.status === 'expired' || fluorographyStatus.status === 'expired') {
+                    cardClass += ' expired-employee';
+                } else if (medicalStatus.status === 'warning' || sanitaryStatus.status === 'warning' || fluorographyStatus.status === 'warning') {
+                    cardClass += ' warning-employee';
+                } else {
+                    cardClass += ' ok-employee';
+                }
+                
+                const div = document.createElement('div');
+                div.className = cardClass;
+                div.innerHTML = `
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6 class="card-title">${employee.name}</h6>
+                                <p class="card-text small">
+                                    <strong>Должность:</strong> ${employee.position || 'Не указана'}<br>
+                                    <strong>Медосмотр:</strong> ${employee.medical_date || 'Не указан'} 
+                                    <span class="status-badge ${medicalStatus.class}">${medicalStatus.text}</span><br>
+                                    <strong>Сан.минимум:</strong> ${employee.sanitary_date || 'Не указан'} 
+                                    <span class="status-badge ${sanitaryStatus.class}">${sanitaryStatus.text}</span><br>
+                                    <strong>Флюорография:</strong> ${employee.fluorography_date || 'Не указан'} 
+                                    <span class="status-badge ${fluorographyStatus.class}">${fluorographyStatus.text}</span><br>
+                                    <strong>Telegram:</strong> ${employee.telegram || 'Не указан'}<br>
+                                    <strong>Телефон:</strong> ${employee.phone || 'Не указан'}<br>
+                                    <strong>Email:</strong> ${employee.email || 'Не указан'}
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button class="btn btn-sm btn-warning me-2" onclick="editEmployee('${employee.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteEmployee('${employee.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Показать список руководителей
+        function showManagersList() {
+            const container = document.getElementById('contentArea');
+            container.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4>Управление пользователями</h4>
+                    <button class="btn btn-secondary" onclick="displayWarehouses()">
+                        <i class="fas fa-arrow-left"></i> Назад к складам
+                    </button>
+                </div>
+            `;
+            
+            if (managers.length === 0) {
+                container.innerHTML += '<div class="alert alert-info">Нет руководителей.</div>';
+                return;
+            }
+            
+            managers.forEach(manager => {
+                const warehouse = warehouses.find(w => w.id === manager.warehouse_id);
+                const div = document.createElement('div');
+                div.className = 'card mb-3';
+                div.innerHTML = `
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5 class="card-title">${manager.name}</h5>
+                                <p class="card-text">Логин: ${manager.login}</p>
+                                <p class="card-text">Telegram: ${manager.telegram || 'Не указан'}</p>
+                                <p class="card-text">Email: ${manager.email || 'Не указан'}</p>
+                                <p class="card-text">Телефон: ${manager.phone || 'Не указан'}</p>
+                                <p class="card-text">Склад: ${warehouse ? warehouse.name : 'Не назначен'}</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button class="btn btn-sm btn-warning me-2" onclick="editManager('${manager.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteManager('${manager.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Модальные окна
+        function showAddWarehouseModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addWarehouseModal'));
+            modal.show();
+        }
+
+        function showAddManagerModal() {
+            const select = document.getElementById('managerWarehouse');
+            select.innerHTML = '<option value="">Выберите склад</option>';
+            
+            warehouses.forEach(warehouse => {
+                const option = document.createElement('option');
+                option.value = warehouse.id;
+                option.textContent = warehouse.name;
+                select.appendChild(option);
+            });
+            
+            const modal = new bootstrap.Modal(document.getElementById('addManagerModal'));
+            modal.show();
+        }
+
+        function showAddEmployeeModal() {
+            const select = document.getElementById('employeeWarehouse');
+            select.innerHTML = '<option value="">Выберите склад</option>';
+            
+            let userWarehouses = warehouses;
+            if (currentUser.role === 'manager') {
+                userWarehouses = warehouses.filter(w => w.id === currentUser.warehouse_id);
+            }
+            
+            userWarehouses.forEach(warehouse => {
+                const option = document.createElement('option');
+                option.value = warehouse.id;
+                option.textContent = warehouse.name;
+                select.appendChild(option);
+            });
+            
+            const modal = new bootstrap.Modal(document.getElementById('addEmployeeModal'));
+            modal.show();
+        }
+
+        function showBulkAddModal() {
+            const select = document.getElementById('bulkWarehouse');
+            select.innerHTML = '<option value="">Выберите склад</option>';
+            
+            let userWarehouses = warehouses;
+            if (currentUser.role === 'manager') {
+                userWarehouses = warehouses.filter(w => w.id === currentUser.warehouse_id);
+            }
+            
+            userWarehouses.forEach(warehouse => {
+                const option = document.createElement('option');
+                option.value = warehouse.id;
+                option.textContent = warehouse.name;
+                select.appendChild(option);
+            });
+            
+            const modal = new bootstrap.Modal(document.getElementById('bulkAddModal'));
+            modal.show();
+        }
+
+        function showReportsModal() {
+            generateReports();
+            const modal = new bootstrap.Modal(document.getElementById('reportsModal'));
+            modal.show();
+        }
+
+        function showNotificationsModal() {
+            loadNotificationHistory();
+            const modal = new bootstrap.Modal(document.getElementById('notificationsModal'));
+            modal.show();
+        }
+
+        // Добавление склада
+        function addWarehouse() {
+            const name = document.getElementById('warehouseName').value.trim();
+            const description = document.getElementById('warehouseDescription').value.trim();
+            const address = document.getElementById('warehouseAddress').value.trim();
+            const phone = document.getElementById('warehousePhone').value.trim();
+            
+            if (!name) {
+                showNotification('Введите название склада', 'error');
+                return;
+            }
+            
+            const warehouse = {
+                id: Date.now().toString(),
+                name: name,
+                description: description,
+                address: address,
+                phone: phone,
+                created_at: new Date().toISOString()
+            };
+            
+            warehouses.push(warehouse);
+            saveData();
+            updateStatistics();
+            updateWarehouseFilter();
+            displayWarehouses();
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addWarehouseModal'));
+            modal.hide();
+            
+            document.getElementById('addWarehouseForm').reset();
+            showNotification('Склад добавлен!', 'success');
+        }
+
+        // Редактирование склада
+        function editWarehouse(warehouseId) {
+            const warehouse = warehouses.find(w => w.id === warehouseId);
+            if (!warehouse) return;
+
+            document.getElementById('editWarehouseId').value = warehouse.id;
+            document.getElementById('editWarehouseName').value = warehouse.name;
+            document.getElementById('editWarehouseDescription').value = warehouse.description || '';
+            document.getElementById('editWarehouseAddress').value = warehouse.address || '';
+            document.getElementById('editWarehousePhone').value = warehouse.phone || '';
+
+            const modal = new bootstrap.Modal(document.getElementById('editWarehouseModal'));
+            modal.show();
+        }
+
+        // Обновление склада
+        function updateWarehouse() {
+            const warehouseId = document.getElementById('editWarehouseId').value;
+            const warehouse = warehouses.find(w => w.id === warehouseId);
+            
+            if (!warehouse) return;
+
+            warehouse.name = document.getElementById('editWarehouseName').value.trim();
+            warehouse.description = document.getElementById('editWarehouseDescription').value.trim();
+            warehouse.address = document.getElementById('editWarehouseAddress').value.trim();
+            warehouse.phone = document.getElementById('editWarehousePhone').value.trim();
+
+            saveData();
+            updateStatistics();
+            updateWarehouseFilter();
+            displayWarehouses();
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editWarehouseModal'));
+            modal.hide();
+
+            showNotification('Склад обновлен!', 'success');
+        }
+
+        // Добавление руководителя
+        function addManager() {
+            const login = document.getElementById('managerLogin').value.trim();
+            const password = document.getElementById('managerPassword').value.trim();
+            const name = document.getElementById('managerName').value.trim();
+            const telegram = document.getElementById('managerTelegram').value.trim();
+            const email = document.getElementById('managerEmail').value.trim();
+            const phone = document.getElementById('managerPhone').value.trim();
+            const warehouseId = document.getElementById('managerWarehouse').value;
+            
+            if (!login || !password || !name || !warehouseId) {
+                showNotification('Заполните все обязательные поля', 'error');
+                return;
+            }
+            
+            const manager = {
+                id: Date.now().toString(),
+                login: login,
+                password: password,
+                name: name,
+                telegram: telegram,
+                email: email,
+                phone: phone,
+                warehouse_id: warehouseId,
+                role: 'manager',
+                created_at: new Date().toISOString()
+            };
+            
+            managers.push(manager);
+            saveData();
+            updateStatistics();
+            displayWarehouses();
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addManagerModal'));
+            modal.hide();
+            
+            document.getElementById('addManagerForm').reset();
+            showNotification('Руководитель добавлен!', 'success');
+        }
+
+        // Редактирование руководителя
+        function editManager(managerId) {
+            const manager = managers.find(m => m.id === managerId);
+            if (!manager) return;
+
+            document.getElementById('editManagerId').value = manager.id;
+            document.getElementById('editManagerLogin').value = manager.login;
+            document.getElementById('editManagerName').value = manager.name;
+            document.getElementById('editManagerTelegram').value = manager.telegram || '';
+            document.getElementById('editManagerEmail').value = manager.email || '';
+            document.getElementById('editManagerPhone').value = manager.phone || '';
+
+            const select = document.getElementById('editManagerWarehouse');
+            select.innerHTML = '<option value="">Выберите склад</option>';
+            
+            warehouses.forEach(warehouse => {
+                const option = document.createElement('option');
+                option.value = warehouse.id;
+                option.textContent = warehouse.name;
+                if (warehouse.id === manager.warehouse_id) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+
+            const modal = new bootstrap.Modal(document.getElementById('editManagerModal'));
+            modal.show();
+        }
+
+        // Обновление руководителя
+        function updateManager() {
+            const managerId = document.getElementById('editManagerId').value;
+            const manager = managers.find(m => m.id === managerId);
+            
+            if (!manager) return;
+
+            manager.login = document.getElementById('editManagerLogin').value.trim();
+            const newPassword = document.getElementById('editManagerPassword').value.trim();
+            if (newPassword) {
+                manager.password = newPassword;
+            }
+            manager.name = document.getElementById('editManagerName').value.trim();
+            manager.telegram = document.getElementById('editManagerTelegram').value.trim();
+            manager.email = document.getElementById('editManagerEmail').value.trim();
+            manager.phone = document.getElementById('editManagerPhone').value.trim();
+            manager.warehouse_id = document.getElementById('editManagerWarehouse').value;
+
+            saveData();
+            updateStatistics();
+            displayWarehouses();
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editManagerModal'));
+            modal.hide();
+
+            showNotification('Руководитель обновлен!', 'success');
+        }
+
+        // Добавление сотрудника
+        function addEmployee() {
+            const warehouseId = document.getElementById('employeeWarehouse').value;
+            const name = document.getElementById('employeeName').value.trim();
+            const position = document.getElementById('employeePosition').value.trim();
+            const medicalDate = document.getElementById('employeeMedicalDate').value;
+            const sanitaryDate = document.getElementById('employeeSanitaryDate').value;
+            const fluorographyDate = document.getElementById('employeeFluorographyDate').value;
+            const telegram = document.getElementById('employeeTelegram').value.trim();
+            const phone = document.getElementById('employeePhone').value.trim();
+            const email = document.getElementById('employeeEmail').value.trim();
+            
+            if (!warehouseId || !name) {
+                showNotification('Выберите склад и введите ФИО', 'error');
+                return;
+            }
+            
+            const employee = {
+                id: Date.now().toString(),
+                warehouse_id: warehouseId,
+                name: name,
+                position: position,
+                medical_date: medicalDate,
+                sanitary_date: sanitaryDate,
+                fluorography_date: fluorographyDate,
+                telegram: telegram,
+                phone: phone,
+                email: email,
+                created_at: new Date().toISOString()
+            };
+            
+            employees.push(employee);
+            saveData();
+            updateStatistics();
+            
+            if (currentUser.role === 'admin') {
+                displayWarehouses();
+            } else {
+                displayManagerWarehouse();
+            }
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal'));
+            modal.hide();
+            
+            document.getElementById('addEmployeeForm').reset();
+            showNotification('Сотрудник добавлен!', 'success');
+        }
+
+        // Редактирование сотрудника
+        function editEmployee(employeeId) {
+            const employee = employees.find(e => e.id === employeeId);
+            if (!employee) return;
+
+            document.getElementById('editEmployeeId').value = employee.id;
+            document.getElementById('editEmployeeName').value = employee.name;
+            document.getElementById('editEmployeePosition').value = employee.position || '';
+            document.getElementById('editEmployeeMedicalDate').value = employee.medical_date || '';
+            document.getElementById('editEmployeeSanitaryDate').value = employee.sanitary_date || '';
+            document.getElementById('editEmployeeFluorographyDate').value = employee.fluorography_date || '';
+            document.getElementById('editEmployeeTelegram').value = employee.telegram || '';
+            document.getElementById('editEmployeePhone').value = employee.phone || '';
+            document.getElementById('editEmployeeEmail').value = employee.email || '';
+
+            const select = document.getElementById('editEmployeeWarehouse');
+            select.innerHTML = '<option value="">Выберите склад</option>';
+            
+            let userWarehouses = warehouses;
+            if (currentUser.role === 'manager') {
+                userWarehouses = warehouses.filter(w => w.id === currentUser.warehouse_id);
+            }
+            
+            userWarehouses.forEach(warehouse => {
+                const option = document.createElement('option');
+                option.value = warehouse.id;
+                option.textContent = warehouse.name;
+                if (warehouse.id === employee.warehouse_id) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+
+            const modal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
+            modal.show();
+        }
+
+        // Обновление сотрудника
+        function updateEmployee() {
+            const employeeId = document.getElementById('editEmployeeId').value;
+            const employee = employees.find(e => e.id === employeeId);
+            
+            if (!employee) return;
+
+            employee.warehouse_id = document.getElementById('editEmployeeWarehouse').value;
+            employee.name = document.getElementById('editEmployeeName').value.trim();
+            employee.position = document.getElementById('editEmployeePosition').value.trim();
+            employee.medical_date = document.getElementById('editEmployeeMedicalDate').value;
+            employee.sanitary_date = document.getElementById('editEmployeeSanitaryDate').value;
+            employee.fluorography_date = document.getElementById('editEmployeeFluorographyDate').value;
+            employee.telegram = document.getElementById('editEmployeeTelegram').value.trim();
+            employee.phone = document.getElementById('editEmployeePhone').value.trim();
+            employee.email = document.getElementById('editEmployeeEmail').value.trim();
+
+            saveData();
+            updateStatistics();
+            
+            if (currentUser.role === 'admin') {
+                displayWarehouses();
+            } else {
+                displayManagerWarehouse();
+            }
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
+            modal.hide();
+
+            showNotification('Сотрудник обновлен!', 'success');
+        }
+
+        // Массовое добавление сотрудников
+        function bulkAddEmployees() {
+            const warehouseId = document.getElementById('bulkWarehouse').value;
+            const namesText = document.getElementById('bulkNames').value.trim();
+            const position = document.getElementById('bulkPosition').value.trim();
+            
+            if (!warehouseId || !namesText) {
+                showNotification('Выберите склад и введите список ФИО', 'error');
+                return;
+            }
+            
+            const names = namesText.split('\n').filter(name => name.trim());
+            
+            if (names.length === 0) {
+                showNotification('Введите хотя бы одно ФИО', 'error');
+                return;
+            }
+            
+            let addedCount = 0;
+            names.forEach(name => {
+                if (name.trim().length >= 5) {
+                    const employee = {
+                        id: (Date.now() + Math.random()).toString(),
+                        warehouse_id: warehouseId,
+                        name: name.trim(),
+                        position: position,
+                        medical_date: '',
+                        sanitary_date: '',
+                        fluorography_date: '',
+                        telegram: '',
+                        phone: '',
+                        email: '',
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    employees.push(employee);
+                    addedCount++;
+                }
+            });
+            
+            saveData();
+            updateStatistics();
+            
+            if (currentUser.role === 'admin') {
+                displayWarehouses();
+            } else {
+                displayManagerWarehouse();
+            }
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('bulkAddModal'));
+            modal.hide();
+            
+            document.getElementById('bulkAddForm').reset();
+            showNotification(`Добавлено ${addedCount} сотрудников!`, 'success');
+        }
+
+        // Генерация отчетов
+        function generateReports() {
+            // Статистика по складам
+            const warehouseStats = document.getElementById('warehouseStats');
+            let warehouseStatsHtml = '';
+            
+            warehouses.forEach(warehouse => {
+                const warehouseEmployees = employees.filter(emp => emp.warehouse_id === warehouse.id);
+                let expiredCount = 0;
+                let warningCount = 0;
+                
+                warehouseEmployees.forEach(employee => {
+                    ['medical_date', 'sanitary_date', 'fluorography_date'].forEach(dateField => {
+                        const status = getDocumentStatus(employee[dateField]);
+                        if (status.status === 'expired') expiredCount++;
+                        if (status.status === 'warning') warningCount++;
+                    });
+                });
+                
+                warehouseStatsHtml += `
+                    <div class="card mb-2">
+                        <div class="card-body p-2">
+                            <h6 class="card-title mb-1">${warehouse.name}</h6>
+                            <small class="text-muted">
+                                Сотрудников: ${warehouseEmployees.length} | 
+                                Просрочено: ${expiredCount} | 
+                                Предупреждений: ${warningCount}
+                            </small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            warehouseStats.innerHTML = warehouseStatsHtml;
+
+            // Статистика по документам
+            const documentStats = document.getElementById('documentStats');
+            let totalMedical = 0, expiredMedical = 0, warningMedical = 0;
+            let totalSanitary = 0, expiredSanitary = 0, warningSanitary = 0;
+            let totalFluorography = 0, expiredFluorography = 0, warningFluorography = 0;
+
+            employees.forEach(employee => {
+                // Медосмотр
+                if (employee.medical_date) {
+                    totalMedical++;
+                    const status = getDocumentStatus(employee.medical_date);
+                    if (status.status === 'expired') expiredMedical++;
+                    if (status.status === 'warning') warningMedical++;
+                }
+
+                // Сан.минимум
+                if (employee.sanitary_date) {
+                    totalSanitary++;
+                    const status = getDocumentStatus(employee.sanitary_date);
+                    if (status.status === 'expired') expiredSanitary++;
+                    if (status.status === 'warning') warningSanitary++;
+                }
+
+                // Флюорография
+                if (employee.fluorography_date) {
+                    totalFluorography++;
+                    const status = getDocumentStatus(employee.fluorography_date);
+                    if (status.status === 'expired') expiredFluorography++;
+                    if (status.status === 'warning') warningFluorography++;
+                }
+            });
+
+            documentStats.innerHTML = `
+                <div class="card mb-2">
+                    <div class="card-body p-2">
+                        <h6 class="card-title mb-1">Медосмотры</h6>
+                        <small class="text-muted">
+                            Всего: ${totalMedical} | 
+                            Просрочено: ${expiredMedical} | 
+                            Предупреждений: ${warningMedical}
+                        </small>
+                    </div>
+                </div>
+                <div class="card mb-2">
+                    <div class="card-body p-2">
+                        <h6 class="card-title mb-1">Сан.минимум</h6>
+                        <small class="text-muted">
+                            Всего: ${totalSanitary} | 
+                            Просрочено: ${expiredSanitary} | 
+                            Предупреждений: ${warningSanitary}
+                        </small>
+                    </div>
+                </div>
+                <div class="card mb-2">
+                    <div class="card-body p-2">
+                        <h6 class="card-title mb-1">Флюорография</h6>
+                        <small class="text-muted">
+                            Всего: ${totalFluorography} | 
+                            Просрочено: ${expiredFluorography} | 
+                            Предупреждений: ${warningFluorography}
+                        </small>
+                    </div>
+                </div>
+            `;
+
+            // Список просроченных
+            const expiredList = document.getElementById('expiredList');
+            let expiredHtml = '';
+            
+            employees.forEach(employee => {
+                const warehouse = warehouses.find(w => w.id === employee.warehouse_id);
+                let hasExpired = false;
+                let expiredDocs = [];
+
+                ['medical_date', 'sanitary_date', 'fluorography_date'].forEach(dateField => {
+                    const status = getDocumentStatus(employee[dateField]);
+                    if (status.status === 'expired') {
+                        hasExpired = true;
+                        expiredDocs.push(dateField.replace('_date', ''));
+                    }
+                });
+
+                if (hasExpired) {
+                    expiredHtml += `
+                        <div class="card mb-2">
+                            <div class="card-body p-2">
+                                <h6 class="card-title mb-1">${employee.name}</h6>
+                                <small class="text-muted">
+                                    Склад: ${warehouse ? warehouse.name : 'Неизвестно'} | 
+                                    Просрочено: ${expiredDocs.join(', ')}
+                                </small>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            expiredList.innerHTML = expiredHtml || '<div class="alert alert-success">Нет просроченных документов!</div>';
+
+            // Список с предупреждениями
+            const warningList = document.getElementById('warningList');
+            let warningHtml = '';
+            
+            employees.forEach(employee => {
+                const warehouse = warehouses.find(w => w.id === employee.warehouse_id);
+                let hasWarning = false;
+                let warningDocs = [];
+
+                ['medical_date', 'sanitary_date', 'fluorography_date'].forEach(dateField => {
+                    const status = getDocumentStatus(employee[dateField]);
+                    if (status.status === 'warning') {
+                        hasWarning = true;
+                        warningDocs.push(dateField.replace('_date', ''));
+                    }
+                });
+
+                if (hasWarning) {
+                    warningHtml += `
+                        <div class="card mb-2">
+                            <div class="card-body p-2">
+                                <h6 class="card-title mb-1">${employee.name}</h6>
+                                <small class="text-muted">
+                                    Склад: ${warehouse ? warehouse.name : 'Неизвестно'} | 
+                                    Предупреждения: ${warningDocs.join(', ')}
+                                </small>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            warningList.innerHTML = warningHtml || '<div class="alert alert-success">Нет документов с предупреждениями!</div>';
+        }
+
+        // Экспорт отчета
+        function exportReport() {
+            const reportData = {
+                warehouses: warehouses,
+                employees: employees,
+                managers: managers,
+                generated_at: new Date().toISOString(),
+                generated_by: currentUser.name
+            };
+
+            const dataStr = JSON.stringify(reportData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `medical_report_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            showNotification('Отчет экспортирован!', 'success');
+        }
+
+        // Экспорт данных
+        function exportData() {
+            const allData = {
+                warehouses: warehouses,
+                employees: employees,
+                managers: managers,
+                settings: settings,
+                exported_at: new Date().toISOString(),
+                exported_by: currentUser.name
+            };
+
+            const dataStr = JSON.stringify(allData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `medical_data_backup_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            showNotification('Данные экспортированы!', 'success');
+        }
+
+        // Загрузка истории уведомлений
+        function loadNotificationHistory() {
+            const history = document.getElementById('notificationHistory');
+            const savedHistory = localStorage.getItem('notification_history');
+            
+            if (savedHistory) {
+                const notifications = JSON.parse(savedHistory);
+                let historyHtml = '';
+                
+                notifications.slice(-10).reverse().forEach(notification => {
+                    historyHtml += `
+                        <div class="border-bottom pb-2 mb-2">
+                            <small class="text-muted">${new Date(notification.timestamp).toLocaleString()}</small><br>
+                            <strong>${notification.type}:</strong> ${notification.message}
+                        </div>
+                    `;
+                });
+                
+                history.innerHTML = historyHtml;
+            } else {
+                history.innerHTML = '<div class="text-muted">История уведомлений пуста</div>';
+            }
+        }
+
+        // Отправка тестового уведомления
+        function sendTestNotification() {
+            const notification = {
+                timestamp: new Date().toISOString(),
+                type: 'Тестовое уведомление',
+                message: 'Система уведомлений работает корректно'
+            };
+
+            // Сохраняем в историю
+            const savedHistory = localStorage.getItem('notification_history');
+            let history = savedHistory ? JSON.parse(savedHistory) : [];
+            history.push(notification);
+            
+            // Оставляем только последние 50 уведомлений
+            if (history.length > 50) {
+                history = history.slice(-50);
+            }
+            
+            localStorage.setItem('notification_history', JSON.stringify(history));
+            
+            showNotification('Тестовое уведомление отправлено!', 'success');
+            loadNotificationHistory();
+        }
+
+        // Удаление
+        function deleteWarehouse(warehouseId) {
+            if (confirm('Вы уверены, что хотите удалить этот склад? Все сотрудники также будут удалены.')) {
+                warehouses = warehouses.filter(w => w.id !== warehouseId);
+                employees = employees.filter(e => e.warehouse_id !== warehouseId);
+                managers = managers.filter(m => m.warehouse_id !== warehouseId);
+                saveData();
+                updateStatistics();
+                updateWarehouseFilter();
+                displayWarehouses();
+                showNotification('Склад удален!', 'success');
+            }
+        }
+
+        function deleteEmployee(employeeId) {
+            if (confirm('Вы уверены, что хотите удалить этого сотрудника?')) {
+                employees = employees.filter(e => e.id !== employeeId);
+                saveData();
+                updateStatistics();
+                
+                if (currentUser.role === 'admin') {
+                    displayWarehouses();
+                } else {
+                    displayManagerWarehouse();
+                }
+                
+                showNotification('Сотрудник удален!', 'success');
+            }
+        }
+
+        function deleteManager(managerId) {
+            if (confirm('Вы уверены, что хотите удалить этого руководителя?')) {
+                managers = managers.filter(m => m.id !== managerId);
+                saveData();
+                updateStatistics();
+                showManagersList();
+                showNotification('Руководитель удален!', 'success');
+            }
+        }
 
         // Показать ошибку
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
-            debugLog('Показана ошибка: ' + message);
         }
 
         // Показать уведомление
@@ -878,22 +2178,6 @@
                 }
             }, 5000);
         }
-
-        // Инициализация при загрузке страницы
-        document.addEventListener('DOMContentLoaded', function() {
-            debugLog('=== ИНИЦИАЛИЗАЦИЯ СТРАНИЦЫ ===');
-            
-            try {
-                debugLog('Загружаем данные...');
-                loadData();
-                debugLog('Проверяем аутентификацию...');
-                checkAuth();
-                debugLog('=== ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА ===');
-            } catch (error) {
-                debugLog('❌ Ошибка при инициализации: ' + error.message);
-                alert('Ошибка при инициализации страницы: ' + error.message);
-            }
-        });
     </script>
 </body>
 </html>
