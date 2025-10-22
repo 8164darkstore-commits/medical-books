@@ -2154,26 +2154,117 @@
 
         // Экспорт данных
         function exportData() {
-            const allData = {
-                warehouses: warehouses,
-                employees: employees,
-                managers: managers,
-                settings: settings,
-                exported_at: new Date().toISOString(),
-                exported_by: currentUser.name
-            };
+            let exportData;
+            
+            if (currentUser.role === 'admin') {
+                // Администратор экспортирует все данные
+                exportData = {
+                    warehouses: warehouses,
+                    employees: employees,
+                    managers: managers.map(m => ({
+                        id: m.id,
+                        login: m.login,
+                        name: m.name,
+                        telegram: m.telegram,
+                        email: m.email,
+                        phone: m.phone,
+                        warehouse_id: m.warehouse_id,
+                        role: m.role,
+                        created_at: m.created_at
+                        // Пароль НЕ экспортируется для безопасности
+                    })),
+                    settings: settings,
+                    notification_history: JSON.parse(localStorage.getItem('notification_history') || '[]'),
+                    statistics: generateStatistics(),
+                    exported_at: new Date().toISOString(),
+                    exported_by: currentUser.name,
+                    export_type: 'full_admin'
+                };
+            } else {
+                // Руководитель экспортирует только свои данные
+                const userWarehouse = warehouses.find(w => w.id === currentUser.warehouse_id);
+                const userEmployees = employees.filter(e => e.warehouse_id === currentUser.warehouse_id);
+                
+                exportData = {
+                    warehouse: userWarehouse,
+                    employees: userEmployees,
+                    manager: managers.find(m => m.id === currentUser.id),
+                    statistics: generateWarehouseStatistics(currentUser.warehouse_id),
+                    exported_at: new Date().toISOString(),
+                    exported_by: currentUser.name,
+                    export_type: 'warehouse_manager'
+                };
+            }
 
-            const dataStr = JSON.stringify(allData, null, 2);
+            const dataStr = JSON.stringify(exportData, null, 2);
             const dataBlob = new Blob([dataStr], {type: 'application/json'});
             const url = URL.createObjectURL(dataBlob);
             
             const link = document.createElement('a');
             link.href = url;
-            link.download = `medical_data_backup_${new Date().toISOString().split('T')[0]}.json`;
+            link.download = `medical_${currentUser.role}_backup_${new Date().toISOString().split('T')[0]}.json`;
             link.click();
             
             URL.revokeObjectURL(url);
             showNotification('Данные экспортированы!', 'success');
+        }
+
+        // Генерация общей статистики
+        function generateStatistics() {
+            const today = new Date();
+            let totalExpired = 0;
+            let totalWarning = 0;
+            let totalEmployees = employees.length;
+            let totalWarehouses = warehouses.length;
+            
+            employees.forEach(employee => {
+                ['medical_date', 'sanitary_date', 'fluorography_date'].forEach(dateField => {
+                    if (employee[dateField]) {
+                        const date = new Date(employee[dateField]);
+                        const diffDays = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
+                        
+                        if (diffDays < 0) totalExpired++;
+                        else if (diffDays <= settings.warningDays) totalWarning++;
+                    }
+                });
+            });
+            
+            return {
+                total_warehouses: totalWarehouses,
+                total_employees: totalEmployees,
+                total_managers: managers.length,
+                expired_documents: totalExpired,
+                warning_documents: totalWarning,
+                generated_at: new Date().toISOString()
+            };
+        }
+
+        // Генерация статистики по складу
+        function generateWarehouseStatistics(warehouseId) {
+            const today = new Date();
+            const warehouseEmployees = employees.filter(e => e.warehouse_id === warehouseId);
+            let expired = 0;
+            let warning = 0;
+            
+            warehouseEmployees.forEach(employee => {
+                ['medical_date', 'sanitary_date', 'fluorography_date'].forEach(dateField => {
+                    if (employee[dateField]) {
+                        const date = new Date(employee[dateField]);
+                        const diffDays = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
+                        
+                        if (diffDays < 0) expired++;
+                        else if (diffDays <= settings.warningDays) warning++;
+                    }
+                });
+            });
+            
+            return {
+                warehouse_id: warehouseId,
+                total_employees: warehouseEmployees.length,
+                expired_documents: expired,
+                warning_documents: warning,
+                generated_at: new Date().toISOString()
+            };
         }
 
         // Загрузка истории уведомлений
