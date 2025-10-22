@@ -618,6 +618,44 @@
         </div>
     </div>
 
+    <!-- Модальное окно списка руководителей -->
+    <div class="modal fade" id="managersListModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Управление пользователями</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <button class="btn btn-success" onclick="showAddManagerModal()">
+                            <i class="fas fa-user-plus me-2"></i>Добавить руководителя
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ФИО</th>
+                                    <th>Логин</th>
+                                    <th>Склад</th>
+                                    <th>Telegram</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="managersList">
+                                <!-- Список руководителей будет здесь -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Модальное окно массового добавления -->
     <div class="modal fade" id="bulkAddModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -1716,6 +1754,38 @@
         function showNotificationsModal() {
             loadNotificationHistory();
             const modal = new bootstrap.Modal(document.getElementById('notificationsModal'));
+            modal.show();
+        }
+
+        function showManagersList() {
+            if (currentUser.role !== 'admin') {
+                showNotification('У вас нет прав для просмотра списка руководителей', 'error');
+                return;
+            }
+            const modal = new bootstrap.Modal(document.getElementById('managersListModal'));
+            const tbody = document.getElementById('managersList');
+            tbody.innerHTML = '';
+            
+            managers.forEach(manager => {
+                const warehouse = warehouses.find(w => w.id === manager.warehouse_id);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${manager.name}</td>
+                    <td>${manager.login}</td>
+                    <td>${warehouse ? warehouse.name : 'Неизвестный склад'}</td>
+                    <td>${manager.telegram || 'Не указан'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" onclick="editManager('${manager.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteManager('${manager.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
             modal.show();
         }
 
