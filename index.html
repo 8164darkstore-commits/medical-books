@@ -113,6 +113,14 @@
         .ok-employee {
             border-left: 4px solid #28a745;
         }
+        .help-text {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(108, 117, 125, 0.1);
+            border-radius: 8px;
+        }
         .login-button {
             cursor: pointer;
             transition: all 0.3s ease;
@@ -144,17 +152,17 @@
                     <label class="form-label">Пароль</label>
                     <input type="password" class="form-control" id="password" required>
                 </div>
-                <button type="button" class="btn btn-primary w-100 login-button" id="loginButton" onclick="handleLogin()">Войти</button>
+                <button type="button" class="btn btn-primary w-100 login-button" id="loginButton" onclick="handleLogin()" onmousedown="console.log('Кнопка нажата!')">
+                    Войти
+                </button>
             </form>
             
             <div id="errorMessage" class="alert alert-danger mt-3" style="display: none;"></div>
             
-            <div class="mt-4 text-center">
-                <small class="text-muted">
-                    <strong>Тестовые доступы:</strong><br>
-                    Администратор: admin / admin123<br>
-                    Руководитель: manager / manager123
-                </small>
+            <div class="help-text">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Нужна помощь?</strong><br>
+                Обратитесь к системному администратору для получения доступа к системе.
             </div>
         </div>
     </div>
@@ -760,12 +768,38 @@
 
         // Инициализация при загрузке страницы
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Страница загружена, инициализация...');
-            loadData();
-            loadSettings();
-            checkAuth();
-            setupLoginForm();
-            setupSearchAndFilters();
+            console.log('=== ИНИЦИАЛИЗАЦИЯ СТРАНИЦЫ ===');
+            console.log('DOM загружен, начинаем инициализацию...');
+            
+            try {
+                console.log('Загружаем данные...');
+                loadData();
+                console.log('Загружаем настройки...');
+                loadSettings();
+                console.log('Проверяем аутентификацию...');
+                checkAuth();
+                console.log('Настраиваем поиск и фильтры...');
+                setupSearchAndFilters();
+                
+                // Дополнительная настройка кнопки входа
+                console.log('Настраиваем дополнительный обработчик кнопки...');
+                const loginButton = document.getElementById('loginButton');
+                if (loginButton) {
+                    loginButton.addEventListener('click', function(e) {
+                        console.log('Дополнительный обработчик сработал!');
+                        e.preventDefault();
+                        handleLogin();
+                    });
+                    console.log('Дополнительный обработчик добавлен');
+                } else {
+                    console.error('Кнопка входа не найдена!');
+                }
+                
+                console.log('=== ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА ===');
+            } catch (error) {
+                console.error('Ошибка при инициализации:', error);
+                alert('Ошибка при инициализации страницы: ' + error.message);
+            }
         });
 
         // Настройка поиска и фильтров
@@ -832,54 +866,7 @@
             modal.show();
         }
 
-        // Настройка формы входа
-        function setupLoginForm() {
-            console.log('Настройка формы входа...');
-            
-            // Добавляем обработчик на кнопку
-            const loginButton = document.getElementById('loginButton');
-            if (loginButton) {
-                loginButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    console.log('Кнопка входа нажата');
-                    handleLogin();
-                });
-            }
-            
-            // Добавляем обработчик на форму
-            const loginForm = document.getElementById('loginForm');
-            if (loginForm) {
-                loginForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    console.log('Форма отправлена');
-                    handleLogin();
-                });
-            }
-            
-            // Добавляем обработчик на Enter в полях
-            const usernameField = document.getElementById('username');
-            const passwordField = document.getElementById('password');
-            
-            if (usernameField) {
-                usernameField.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleLogin();
-                    }
-                });
-            }
-            
-            if (passwordField) {
-                passwordField.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleLogin();
-                    }
-                });
-            }
-        }
-
-        // Обработка входа - ИСПРАВЛЕННАЯ ВЕРСИЯ
+        // Обработка входа - УПРОЩЕННАЯ ВЕРСИЯ
         function handleLogin() {
             console.log('=== НАЧАЛО ОБРАБОТКИ ВХОДА ===');
             
@@ -920,6 +907,9 @@
                     
                     console.log('Вызываем showMainScreen...');
                     showMainScreen();
+                    // На всякий случай полностью убираем экран входа, чтобы не мешал стилями
+                    const ls = document.getElementById('loginScreen');
+                    if (ls) { ls.style.display = 'none'; }
                     console.log('=== ВХОД ЗАВЕРШЕН УСПЕШНО ===');
                     return;
                 }
@@ -937,6 +927,8 @@
                     };
                     localStorage.setItem('current_user', JSON.stringify(currentUser));
                     showMainScreen();
+                    const ls2 = document.getElementById('loginScreen');
+                    if (ls2) { ls2.style.display = 'none'; }
                     console.log('=== ВХОД РУКОВОДИТЕЛЯ ЗАВЕРШЕН ===');
                     return;
                 }
@@ -1104,27 +1096,66 @@
 
         // Показать основной экран
         function showMainScreen() {
-            console.log('Показываем основной экран для:', currentUser.name);
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('mainScreen').style.display = 'block';
+            console.log('=== НАЧАЛО showMainScreen ===');
+            console.log('Текущий пользователь:', currentUser);
             
-            // Обновляем информацию о пользователе
-            document.getElementById('userInfo').textContent = 
-                `Добро пожаловать, ${currentUser.name} (${currentUser.role === 'admin' ? 'Администратор' : 'Руководитель'})`;
-            
-            // Показываем соответствующие кнопки
-            if (currentUser.role === 'admin') {
-                document.getElementById('adminControls').style.display = 'block';
-                document.getElementById('managerControls').style.display = 'none';
-                displayWarehouses();
-            } else {
-                document.getElementById('adminControls').style.display = 'none';
-                document.getElementById('managerControls').style.display = 'block';
-                displayManagerWarehouse();
+            try {
+                const loginScreen = document.getElementById('loginScreen');
+                const mainScreen = document.getElementById('mainScreen');
+                
+                if (!loginScreen || !mainScreen) {
+                    console.error('Элементы экранов не найдены!');
+                    alert('Ошибка: элементы экранов не найдены');
+                    return;
+                }
+                
+                console.log('Скрываем экран входа...');
+                loginScreen.style.display = 'none';
+                console.log('Показываем основной экран...');
+                mainScreen.style.display = 'block';
+                
+                // Обновляем информацию о пользователе
+                const userInfoElement = document.getElementById('userInfo');
+                if (userInfoElement) {
+                    userInfoElement.textContent = 
+                        `Добро пожаловать, ${currentUser.name} (${currentUser.role === 'admin' ? 'Администратор' : 'Руководитель'})`;
+                    console.log('Информация о пользователе обновлена');
+                }
+                
+                // Показываем соответствующие кнопки
+                if (currentUser.role === 'admin') {
+                    console.log('Настраиваем интерфейс администратора...');
+                    const adminControls = document.getElementById('adminControls');
+                    const managerControls = document.getElementById('managerControls');
+                    
+                    if (adminControls) adminControls.style.display = 'block';
+                    if (managerControls) managerControls.style.display = 'none';
+                    
+                    console.log('Вызываем displayWarehouses...');
+                    displayWarehouses();
+                } else {
+                    console.log('Настраиваем интерфейс руководителя...');
+                    const adminControls = document.getElementById('adminControls');
+                    const managerControls = document.getElementById('managerControls');
+                    
+                    if (adminControls) adminControls.style.display = 'none';
+                    if (managerControls) managerControls.style.display = 'block';
+                    
+                    console.log('Вызываем displayManagerWarehouse...');
+                    displayManagerWarehouse();
+                }
+                
+                console.log('Обновляем статистику...');
+                updateStatistics();
+                console.log('Обновляем фильтр складов...');
+                updateWarehouseFilter();
+                
+                console.log('=== showMainScreen ЗАВЕРШЕН УСПЕШНО ===');
+                
+            } catch (error) {
+                console.error('Ошибка в showMainScreen:', error);
+                alert('Ошибка при показе основного экрана: ' + error.message);
             }
-            
-            updateStatistics();
-            updateWarehouseFilter();
         }
 
         // Выход из системы
