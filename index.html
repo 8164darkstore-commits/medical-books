@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Система управления медкнижками - Безопасная версия</title>
+    <title>Система управления медкнижками - Полная версия</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -132,6 +132,19 @@
         .login-button:active {
             transform: translateY(0);
         }
+        /* Принудительное скрытие экрана входа */
+        #loginScreen.hidden {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+        /* Принудительное показ основного экрана */
+        #mainScreen.visible {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
     </style>
 </head>
 <body>
@@ -152,7 +165,7 @@
                     <label class="form-label">Пароль</label>
                     <input type="password" class="form-control" id="password" required>
                 </div>
-                <button type="button" class="btn btn-primary w-100 login-button" id="loginButton" onclick="handleLogin()">
+                <button type="button" class="btn btn-primary w-100 login-button" id="loginButton" onclick="handleLogin()" onmousedown="console.log('Кнопка нажата!')">
                     Войти
                 </button>
             </form>
@@ -768,11 +781,38 @@
 
         // Инициализация при загрузке страницы
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Страница загружена, инициализация...');
-            loadData();
-            loadSettings();
-            checkAuth();
-            setupSearchAndFilters();
+            console.log('=== ИНИЦИАЛИЗАЦИЯ СТРАНИЦЫ ===');
+            console.log('DOM загружен, начинаем инициализацию...');
+            
+            try {
+                console.log('Загружаем данные...');
+                loadData();
+                console.log('Загружаем настройки...');
+                loadSettings();
+                console.log('Проверяем аутентификацию...');
+                checkAuth();
+                console.log('Настраиваем поиск и фильтры...');
+                setupSearchAndFilters();
+                
+                // Дополнительная настройка кнопки входа
+                console.log('Настраиваем дополнительный обработчик кнопки...');
+                const loginButton = document.getElementById('loginButton');
+                if (loginButton) {
+                    loginButton.addEventListener('click', function(e) {
+                        console.log('Дополнительный обработчик сработал!');
+                        e.preventDefault();
+                        handleLogin();
+                    });
+                    console.log('Дополнительный обработчик добавлен');
+                } else {
+                    console.error('Кнопка входа не найдена!');
+                }
+                
+                console.log('=== ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА ===');
+            } catch (error) {
+                console.error('Ошибка при инициализации:', error);
+                alert('Ошибка при инициализации страницы: ' + error.message);
+            }
         });
 
         // Настройка поиска и фильтров
@@ -841,51 +881,107 @@
 
         // Обработка входа - УПРОЩЕННАЯ ВЕРСИЯ
         function handleLogin() {
-            console.log('Обработка входа...');
+            console.log('=== НАЧАЛО ОБРАБОТКИ ВХОДА ===');
             
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-            
-            console.log('Логин:', username, 'Пароль:', password);
-            
-            if (!username || !password) {
-                showError('Введите логин и пароль');
-                return;
+            try {
+                const usernameElement = document.getElementById('username');
+                const passwordElement = document.getElementById('password');
+                
+                if (!usernameElement || !passwordElement) {
+                    console.error('Элементы формы не найдены!');
+                    alert('Ошибка: элементы формы не найдены');
+                    return;
+                }
+                
+                const username = usernameElement.value.trim();
+                const password = passwordElement.value.trim();
+                
+                console.log('Логин:', username, 'Пароль:', password);
+                
+                if (!username || !password) {
+                    console.log('Пустые поля');
+                    showError('Введите логин и пароль');
+                    return;
+                }
+                
+                // Проверяем администратора
+                if (username === 'admin' && password === 'admin123') {
+                    console.log('✅ Администратор найден, создаем пользователя...');
+                    currentUser = {
+                        id: 'admin',
+                        login: 'admin',
+                        name: 'Системный администратор',
+                        role: 'admin',
+                        warehouse_id: null
+                    };
+                    
+                    console.log('Сохраняем пользователя в localStorage...');
+                    localStorage.setItem('current_user', JSON.stringify(currentUser));
+                    
+                    console.log('Вызываем showMainScreen...');
+                    showMainScreen();
+                    // Принудительно скрываем экран входа
+                    setTimeout(() => {
+                        const ls = document.getElementById('loginScreen');
+                        if (ls) { 
+                            ls.classList.add('hidden');
+                            ls.style.display = 'none';
+                            ls.style.visibility = 'hidden';
+                            ls.style.opacity = '0';
+                        }
+                        const ms = document.getElementById('mainScreen');
+                        if (ms) {
+                            ms.classList.add('visible');
+                            ms.style.display = 'block';
+                            ms.style.visibility = 'visible';
+                            ms.style.opacity = '1';
+                        }
+                    }, 100);
+                    console.log('=== ВХОД ЗАВЕРШЕН УСПЕШНО ===');
+                    return;
+                }
+                
+                // Проверяем руководителей
+                const manager = managers.find(m => m.login === username && m.password === password);
+                if (manager) {
+                    console.log('✅ Руководитель найден:', manager.name);
+                    currentUser = {
+                        id: manager.id,
+                        login: manager.login,
+                        name: manager.name,
+                        role: 'manager',
+                        warehouse_id: manager.warehouse_id
+                    };
+                    localStorage.setItem('current_user', JSON.stringify(currentUser));
+                    showMainScreen();
+                    // Принудительно скрываем экран входа для руководителя
+                    setTimeout(() => {
+                        const ls = document.getElementById('loginScreen');
+                        if (ls) { 
+                            ls.classList.add('hidden');
+                            ls.style.display = 'none';
+                            ls.style.visibility = 'hidden';
+                            ls.style.opacity = '0';
+                        }
+                        const ms = document.getElementById('mainScreen');
+                        if (ms) {
+                            ms.classList.add('visible');
+                            ms.style.display = 'block';
+                            ms.style.visibility = 'visible';
+                            ms.style.opacity = '1';
+                        }
+                    }, 100);
+                    console.log('=== ВХОД РУКОВОДИТЕЛЯ ЗАВЕРШЕН ===');
+                    return;
+                }
+                
+                console.log('❌ Неверные данные для входа');
+                showError('Неверный логин или пароль');
+                
+            } catch (error) {
+                console.error('Ошибка при входе:', error);
+                alert('Произошла ошибка при входе: ' + error.message);
             }
-            
-            // Проверяем администратора
-            if (username === 'admin' && password === 'admin123') {
-                console.log('Вход как администратор');
-                currentUser = {
-                    id: 'admin',
-                    login: 'admin',
-                    name: 'Системный администратор',
-                    role: 'admin',
-                    warehouse_id: null
-                };
-                localStorage.setItem('current_user', JSON.stringify(currentUser));
-                showMainScreen();
-                return;
-            }
-            
-            // Проверяем руководителей
-            const manager = managers.find(m => m.login === username && m.password === password);
-            if (manager) {
-                console.log('Вход как руководитель:', manager.name);
-                currentUser = {
-                    id: manager.id,
-                    login: manager.login,
-                    name: manager.name,
-                    role: 'manager',
-                    warehouse_id: manager.warehouse_id
-                };
-                localStorage.setItem('current_user', JSON.stringify(currentUser));
-                showMainScreen();
-                return;
-            }
-            
-            console.log('Неверные данные для входа');
-            showError('Неверный логин или пароль');
         }
 
         // Загрузка данных из localStorage
@@ -1036,33 +1132,92 @@
         // Показать экран входа
         function showLoginScreen() {
             console.log('Показываем экран входа');
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('mainScreen').style.display = 'none';
+            const loginScreen = document.getElementById('loginScreen');
+            const mainScreen = document.getElementById('mainScreen');
+            
+            if (loginScreen) {
+                loginScreen.classList.remove('hidden');
+                loginScreen.style.display = 'flex';
+                loginScreen.style.visibility = 'visible';
+                loginScreen.style.opacity = '1';
+            }
+            
+            if (mainScreen) {
+                mainScreen.classList.remove('visible');
+                mainScreen.style.display = 'none';
+                mainScreen.style.visibility = 'hidden';
+                mainScreen.style.opacity = '0';
+            }
         }
 
         // Показать основной экран
         function showMainScreen() {
-            console.log('Показываем основной экран для:', currentUser.name);
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('mainScreen').style.display = 'block';
+            console.log('=== НАЧАЛО showMainScreen ===');
+            console.log('Текущий пользователь:', currentUser);
             
-            // Обновляем информацию о пользователе
-            document.getElementById('userInfo').textContent = 
-                `Добро пожаловать, ${currentUser.name} (${currentUser.role === 'admin' ? 'Администратор' : 'Руководитель'})`;
-            
-            // Показываем соответствующие кнопки
-            if (currentUser.role === 'admin') {
-                document.getElementById('adminControls').style.display = 'block';
-                document.getElementById('managerControls').style.display = 'none';
-                displayWarehouses();
-            } else {
-                document.getElementById('adminControls').style.display = 'none';
-                document.getElementById('managerControls').style.display = 'block';
-                displayManagerWarehouse();
+            try {
+                const loginScreen = document.getElementById('loginScreen');
+                const mainScreen = document.getElementById('mainScreen');
+                
+                if (!loginScreen || !mainScreen) {
+                    console.error('Элементы экранов не найдены!');
+                    alert('Ошибка: элементы экранов не найдены');
+                    return;
+                }
+                
+                console.log('Скрываем экран входа...');
+                loginScreen.classList.add('hidden');
+                loginScreen.style.display = 'none';
+                loginScreen.style.visibility = 'hidden';
+                loginScreen.style.opacity = '0';
+                console.log('Показываем основной экран...');
+                mainScreen.classList.add('visible');
+                mainScreen.style.display = 'block';
+                mainScreen.style.visibility = 'visible';
+                mainScreen.style.opacity = '1';
+                
+                // Обновляем информацию о пользователе
+                const userInfoElement = document.getElementById('userInfo');
+                if (userInfoElement) {
+                    userInfoElement.textContent = 
+                        `Добро пожаловать, ${currentUser.name} (${currentUser.role === 'admin' ? 'Администратор' : 'Руководитель'})`;
+                    console.log('Информация о пользователе обновлена');
+                }
+                
+                // Показываем соответствующие кнопки
+                if (currentUser.role === 'admin') {
+                    console.log('Настраиваем интерфейс администратора...');
+                    const adminControls = document.getElementById('adminControls');
+                    const managerControls = document.getElementById('managerControls');
+                    
+                    if (adminControls) adminControls.style.display = 'block';
+                    if (managerControls) managerControls.style.display = 'none';
+                    
+                    console.log('Вызываем displayWarehouses...');
+                    displayWarehouses();
+                } else {
+                    console.log('Настраиваем интерфейс руководителя...');
+                    const adminControls = document.getElementById('adminControls');
+                    const managerControls = document.getElementById('managerControls');
+                    
+                    if (adminControls) adminControls.style.display = 'none';
+                    if (managerControls) managerControls.style.display = 'block';
+                    
+                    console.log('Вызываем displayManagerWarehouse...');
+                    displayManagerWarehouse();
+                }
+                
+                console.log('Обновляем статистику...');
+                updateStatistics();
+                console.log('Обновляем фильтр складов...');
+                updateWarehouseFilter();
+                
+                console.log('=== showMainScreen ЗАВЕРШЕН УСПЕШНО ===');
+                
+            } catch (error) {
+                console.error('Ошибка в showMainScreen:', error);
+                alert('Ошибка при показе основного экрана: ' + error.message);
             }
-            
-            updateStatistics();
-            updateWarehouseFilter();
         }
 
         // Выход из системы
