@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система управления медкнижками</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; 
+        }
+        .main-container { 
+            background: rgba(255,255,255,0.95); 
+            border-radius: 20px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1); 
+        }
+        .card { 
+            border: none; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+        }
+        .btn { 
+            border-radius: 10px; 
+            padding: 10px 20px; 
+            font-weight: 600; 
+        }
+        .btn-primary { 
+            background: linear-gradient(45deg, #667eea, #764ba2); 
+            border: none; 
+        }
+        .btn-success { 
+            background: linear-gradient(45deg, #56ab2f, #a8e6cf); 
+            border: none; 
+        }
+        .btn-warning { 
+            background: linear-gradient(45deg, #f093fb, #f5576c); 
+            border: none; 
+        }
+        .btn-danger { 
+            background: linear-gradient(45deg, #ff416c, #ff4b2b); 
+            border: none; 
+        }
+        .stat-card { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+        }
+        .modal-content { 
+            border-radius: 15px; 
+            border: none; 
+        }
+        .form-control { 
+            border-radius: 10px; 
+            border: 2px solid #e9ecef; 
+        }
+        .form-control:focus { 
+            border-color: #667eea; 
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25); 
+        }
+        .alert { 
+            border-radius: 10px; 
+            border: none; 
+        }
+        .table { 
+            border-radius: 10px; 
+            overflow: hidden; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="main-container p-4">
+            <!-- Заголовок -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold text-primary mb-3">
+                    <i class="fas fa-hospital me-3"></i>Система управления медкнижками
+                </h1>
+                <p class="lead text-muted">Полноценный веб-сайт для управления медкнижками сотрудников</p>
+                <div class="alert alert-success">
+                    <h4>🎉 Поздравляем!</h4>
+                    <p>Ваш сайт успешно развернут на GitHub Pages!</p>
+                    <p><strong>Доступен из любого города мира бесплатно!</strong></p>
+                </div>
+            </div>
+
+            <!-- Статистика -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card stat-card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-warehouse fa-2x mb-3"></i>
+                            <h3 id="totalWarehouses">0</h3>
+                            <p class="mb-0">Складов</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-users fa-2x mb-3"></i>
+                            <h3 id="totalEmployees">0</h3>
+                            <p class="mb-0">Сотрудников</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                            <h3 id="totalExpired">0</h3>
+                            <p class="mb-0">Просрочено</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-clock fa-2x mb-3"></i>
+                            <h3 id="totalSoon">0</h3>
+                            <p class="mb-0">Скоро истечет</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Кнопки управления -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <button class="btn btn-primary btn-lg w-100" onclick="showAddWarehouseModal()">
+                        <i class="fas fa-plus me-2"></i>Добавить склад
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-success btn-lg w-100" onclick="showAddEmployeeModal()">
+                        <i class="fas fa-user-plus me-2"></i>Добавить сотрудника
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-warning btn-lg w-100" onclick="showBulkAddModal()">
+                        <i class="fas fa-users me-2"></i>Массовое добавление
+                    </button>
+                </div>
+            </div>
+
+            <!-- Список складов -->
+            <div class="row">
+                <div class="col-12">
+                    <h3 class="mb-3"><i class="fas fa-warehouse me-2"></i>Склады</h3>
+                    <div id="warehousesList">
+                        <!-- Склады будут загружены здесь -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления склада -->
+    <div class="modal fade" id="addWarehouseModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Добавить склад</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addWarehouseForm">
+                        <div class="mb-3">
+                            <label class="form-label">Название склада</label>
+                            <input type="text" class="form-control" id="warehouseName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Менеджер</label>
+                            <input type="text" class="form-control" id="warehouseManager">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Telegram менеджера</label>
+                            <input type="text" class="form-control" id="warehouseManagerTelegram">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="addWarehouse()">Добавить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления сотрудника -->
+    <div class="modal fade" id="addEmployeeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Добавить сотрудника</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addEmployeeForm">
+                        <div class="mb-3">
+                            <label class="form-label">Склад</label>
+                            <select class="form-control" id="employeeWarehouse" required>
+                                <option value="">Выберите склад</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ФИО сотрудника</label>
+                            <input type="text" class="form-control" id="employeeName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата медосмотра</label>
+                            <input type="date" class="form-control" id="employeeMedicalDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата сан.минимума</label>
+                            <input type="date" class="form-control" id="employeeSanitaryDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата флюорографии</label>
+                            <input type="date" class="form-control" id="employeeFluorographyDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Telegram</label>
+                            <input type="text" class="form-control" id="employeeTelegram">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="addEmployee()">Добавить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно массового добавления -->
+    <div class="modal fade" id="bulkAddModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Массовое добавление сотрудников</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="bulkAddForm">
+                        <div class="mb-3">
+                            <label class="form-label">Склад</label>
+                            <select class="form-control" id="bulkWarehouse" required>
+                                <option value="">Выберите склад</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Список ФИО (по одному на строку)</label>
+                            <textarea class="form-control" id="bulkNames" rows="10" placeholder="Иванов Иван Иванович&#10;Петров Петр Петрович&#10;Сидоров Сидор Сидорович"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="bulkAddEmployees()">Добавить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Уведомления -->
+    <div id="notifications" class="position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Данные хранятся в localStorage
+        let warehouses = [];
+        let employees = [];
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            updateStatistics();
+            displayWarehouses();
+        });
+
+        // Загрузка данных из localStorage
+        function loadData() {
+            const savedWarehouses = localStorage.getItem('medical_warehouses');
+            const savedEmployees = localStorage.getItem('medical_employees');
+            
+            if (savedWarehouses) {
+                warehouses = JSON.parse(savedWarehouses);
+            } else {
+                // Добавляем тестовые данные
+                warehouses = [
+                    {
+                        id: '1',
+                        name: 'СКК 1234',
+                        manager: 'Иванов Иван Иванович',
+                        manager_telegram: '@ivanov_manager',
+                        created_at: new Date().toISOString()
+                    },
+                    {
+                        id: '2',
+                        name: 'СКК 5678',
+                        manager: 'Петров Петр Петрович',
+                        manager_telegram: '@petrov_manager',
+                        created_at: new Date().toISOString()
+                    }
+                ];
+                saveData();
+            }
+            
+            if (savedEmployees) {
+                employees = JSON.parse(savedEmployees);
+            } else {
+                // Добавляем тестовых сотрудников
+                employees = [
+                    {
+                        id: '1',
+                        warehouse_id: '1',
+                        name: 'Сотрудник 1 СКК 1234',
+                        medical_date: '2024-12-31',
+                        sanitary_date: '2024-12-31',
+                        fluorography_date: '2024-12-31',
+                        telegram: '@employee1',
+                        created_at: new Date().toISOString()
+                    },
+                    {
+                        id: '2',
+                        warehouse_id: '1',
+                        name: 'Сотрудник 2 СКК 1234',
+                        medical_date: '2024-11-30',
+                        sanitary_date: '2024-11-30',
+                        fluorography_date: '2024-11-30',
+                        telegram: '@employee2',
+                        created_at: new Date().toISOString()
+                    }
+                ];
+                saveData();
+            }
+        }
+
+        // Сохранение данных в localStorage
+        function saveData() {
+            localStorage.setItem('medical_warehouses', JSON.stringify(warehouses));
+            localStorage.setItem('medical_employees', JSON.stringify(employees));
+        }
+
+        // Обновление статистики
+        function updateStatistics() {
+            document.getElementById('totalWarehouses').textContent = warehouses.length;
+            document.getElementById('totalEmployees').textContent = employees.length;
+            
+            // Подсчет просроченных и скоро истекающих
+            let expired = 0;
+            let soon = 0;
+            const today = new Date();
+            
+            employees.forEach(employee => {
+                ['medical_date', 'sanitary_date', 'fluorography_date'].forEach(dateField => {
+                    if (employee[dateField]) {
+                        const date = new Date(employee[dateField]);
+                        const diffDays = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
+                        
+                        if (diffDays < 0) {
+                            expired++;
+                        } else if (diffDays <= 15) {
+                            soon++;
+                        }
+                    }
+                });
+            });
+            
+            document.getElementById('totalExpired').textContent = expired;
+            document.getElementById('totalSoon').textContent = soon;
+        }
+
+        // Отображение складов
+        function displayWarehouses() {
+            const container = document.getElementById('warehousesList');
+            container.innerHTML = '';
+            
+            if (warehouses.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">Нет складов. Добавьте первый склад.</div>';
+                return;
+            }
+            
+            warehouses.forEach(warehouse => {
+                const warehouseEmployees = employees.filter(emp => emp.warehouse_id === warehouse.id);
+                const div = document.createElement('div');
+                div.className = 'card mb-3';
+                div.innerHTML = `
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5 class="card-title">${warehouse.name}</h5>
+                                <p class="card-text">Менеджер: ${warehouse.manager || 'Не указан'}</p>
+                                <p class="card-text">Telegram: ${warehouse.manager_telegram || 'Не указан'}</p>
+                                <p class="card-text">Сотрудников: ${warehouseEmployees.length}</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button class="btn btn-sm btn-info me-2" onclick="showEmployees('${warehouse.id}')">
+                                    <i class="fas fa-users"></i> Сотрудники
+                                </button>
+                                <button class="btn btn-sm btn-warning me-2" onclick="editWarehouse('${warehouse.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteWarehouse('${warehouse.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Показать сотрудников склада
+        function showEmployees(warehouseId) {
+            const warehouse = warehouses.find(w => w.id === warehouseId);
+            const warehouseEmployees = employees.filter(emp => emp.warehouse_id === warehouseId);
+            
+            const container = document.getElementById('warehousesList');
+            container.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4>Сотрудники склада: ${warehouse.name}</h4>
+                    <button class="btn btn-secondary" onclick="displayWarehouses()">
+                        <i class="fas fa-arrow-left"></i> Назад к складам
+                    </button>
+                </div>
+            `;
+            
+            if (warehouseEmployees.length === 0) {
+                container.innerHTML += '<div class="alert alert-info">Нет сотрудников в этом складе.</div>';
+                return;
+            }
+            
+            warehouseEmployees.forEach(employee => {
+                const div = document.createElement('div');
+                div.className = 'card mb-2';
+                div.innerHTML = `
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6 class="card-title">${employee.name}</h6>
+                                <p class="card-text small">
+                                    Медосмотр: ${employee.medical_date || 'Не указан'}<br>
+                                    Сан.минимум: ${employee.sanitary_date || 'Не указан'}<br>
+                                    Флюорография: ${employee.fluorography_date || 'Не указан'}<br>
+                                    Telegram: ${employee.telegram || 'Не указан'}
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button class="btn btn-sm btn-warning me-2" onclick="editEmployee('${employee.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteEmployee('${employee.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Показать модальное окно добавления склада
+        function showAddWarehouseModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addWarehouseModal'));
+            modal.show();
+        }
+
+        // Добавить склад
+        function addWarehouse() {
+            const name = document.getElementById('warehouseName').value.trim();
+            const manager = document.getElementById('warehouseManager').value.trim();
+            const managerTelegram = document.getElementById('warehouseManagerTelegram').value.trim();
+            
+            if (!name) {
+                showNotification('Введите название склада', 'error');
+                return;
+            }
+            
+            const warehouse = {
+                id: Date.now().toString(),
+                name: name,
+                manager: manager,
+                manager_telegram: managerTelegram,
+                created_at: new Date().toISOString()
+            };
+            
+            warehouses.push(warehouse);
+            saveData();
+            updateStatistics();
+            displayWarehouses();
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addWarehouseModal'));
+            modal.hide();
+            
+            document.getElementById('addWarehouseForm').reset();
+            showNotification('Склад добавлен!', 'success');
+        }
+
+        // Показать модальное окно добавления сотрудника
+        function showAddEmployeeModal() {
+            const select = document.getElementById('employeeWarehouse');
+            select.innerHTML = '<option value="">Выберите склад</option>';
+            
+            warehouses.forEach(warehouse => {
+                const option = document.createElement('option');
+                option.value = warehouse.id;
+                option.textContent = warehouse.name;
+                select.appendChild(option);
+            });
+            
+            const modal = new bootstrap.Modal(document.getElementById('addEmployeeModal'));
+            modal.show();
+        }
+
+        // Добавить сотрудника
+        function addEmployee() {
+            const warehouseId = document.getElementById('employeeWarehouse').value;
+            const name = document.getElementById('employeeName').value.trim();
+            const medicalDate = document.getElementById('employeeMedicalDate').value;
+            const sanitaryDate = document.getElementById('employeeSanitaryDate').value;
+            const fluorographyDate = document.getElementById('employeeFluorographyDate').value;
+            const telegram = document.getElementById('employeeTelegram').value.trim();
+            
+            if (!warehouseId || !name) {
+                showNotification('Выберите склад и введите ФИО', 'error');
+                return;
+            }
+            
+            const employee = {
+                id: Date.now().toString(),
+                warehouse_id: warehouseId,
+                name: name,
+                medical_date: medicalDate,
+                sanitary_date: sanitaryDate,
+                fluorography_date: fluorographyDate,
+                telegram: telegram,
+                created_at: new Date().toISOString()
+            };
+            
+            employees.push(employee);
+            saveData();
+            updateStatistics();
+            displayWarehouses();
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal'));
+            modal.hide();
+            
+            document.getElementById('addEmployeeForm').reset();
+            showNotification('Сотрудник добавлен!', 'success');
+        }
+
+        // Показать модальное окно массового добавления
+        function showBulkAddModal() {
+            const select = document.getElementById('bulkWarehouse');
+            select.innerHTML = '<option value="">Выберите склад</option>';
+            
+            warehouses.forEach(warehouse => {
+                const option = document.createElement('option');
+                option.value = warehouse.id;
+                option.textContent = warehouse.name;
+                select.appendChild(option);
+            });
+            
+            const modal = new bootstrap.Modal(document.getElementById('bulkAddModal'));
+            modal.show();
+        }
+
+        // Массовое добавление сотрудников
+        function bulkAddEmployees() {
+            const warehouseId = document.getElementById('bulkWarehouse').value;
+            const namesText = document.getElementById('bulkNames').value.trim();
+            
+            if (!warehouseId || !namesText) {
+                showNotification('Выберите склад и введите список ФИО', 'error');
+                return;
+            }
+            
+            const names = namesText.split('\n').filter(name => name.trim());
+            
+            if (names.length === 0) {
+                showNotification('Введите хотя бы одно ФИО', 'error');
+                return;
+            }
+            
+            let addedCount = 0;
+            names.forEach(name => {
+                if (name.trim().length >= 5) {
+                    const employee = {
+                        id: (Date.now() + Math.random()).toString(),
+                        warehouse_id: warehouseId,
+                        name: name.trim(),
+                        medical_date: '',
+                        sanitary_date: '',
+                        fluorography_date: '',
+                        telegram: '',
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    employees.push(employee);
+                    addedCount++;
+                }
+            });
+            
+            saveData();
+            updateStatistics();
+            displayWarehouses();
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('bulkAddModal'));
+            modal.hide();
+            
+            document.getElementById('bulkAddForm').reset();
+            showNotification(`Добавлено ${addedCount} сотрудников!`, 'success');
+        }
+
+        // Удалить склад
+        function deleteWarehouse(warehouseId) {
+            if (confirm('Вы уверены, что хотите удалить этот склад? Все сотрудники также будут удалены.')) {
+                warehouses = warehouses.filter(w => w.id !== warehouseId);
+                employees = employees.filter(e => e.warehouse_id !== warehouseId);
+                saveData();
+                updateStatistics();
+                displayWarehouses();
+                showNotification('Склад удален!', 'success');
+            }
+        }
+
+        // Удалить сотрудника
+        function deleteEmployee(employeeId) {
+            if (confirm('Вы уверены, что хотите удалить этого сотрудника?')) {
+                employees = employees.filter(e => e.id !== employeeId);
+                saveData();
+                updateStatistics();
+                displayWarehouses();
+                showNotification('Сотрудник удален!', 'success');
+            }
+        }
+
+        // Редактировать склад (заглушка)
+        function editWarehouse(warehouseId) {
+            showNotification('Функция редактирования будет добавлена в следующей версии', 'info');
+        }
+
+        // Редактировать сотрудника (заглушка)
+        function editEmployee(employeeId) {
+            showNotification('Функция редактирования будет добавлена в следующей версии', 'info');
+        }
+
+        // Показать уведомление
+        function showNotification(message, type = 'info') {
+            const notifications = document.getElementById('notifications');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            notifications.appendChild(alert);
+
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
