@@ -354,6 +354,11 @@
                             <label class="form-label">Телефон</label>
                             <input type="text" class="form-control" id="warehousePhone">
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Telegram Chat ID</label>
+                            <input type="text" class="form-control" id="warehouseChatId" placeholder="-1001234567890">
+                            <small class="form-text text-muted">ID группы Telegram для уведомлений (начинается с -100)</small>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -390,6 +395,11 @@
                         <div class="mb-3">
                             <label class="form-label">Телефон</label>
                             <input type="text" class="form-control" id="editWarehousePhone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Telegram Chat ID</label>
+                            <input type="text" class="form-control" id="editWarehouseChatId" placeholder="-1001234567890">
+                            <small class="form-text text-muted">ID группы Telegram для уведомлений (начинается с -100)</small>
                         </div>
                     </form>
                 </div>
@@ -1003,6 +1013,7 @@
                         description: 'Основной склад',
                         address: 'ул. Примерная, 1',
                         phone: '+7 (999) 123-45-67',
+                        chat_id: '-1001234567890',
                         created_at: new Date().toISOString()
                     },
                     {
@@ -1011,6 +1022,7 @@
                         description: 'Дополнительный склад',
                         address: 'ул. Тестовая, 2',
                         phone: '+7 (999) 765-43-21',
+                        chat_id: '-1001234567891',
                         created_at: new Date().toISOString()
                     }
                 ];
@@ -1315,6 +1327,7 @@
                                 <p class="card-text">${warehouse.description || 'Описание не указано'}</p>
                                 <p class="card-text"><i class="fas fa-map-marker-alt me-1"></i>${warehouse.address || 'Адрес не указан'}</p>
                                 <p class="card-text"><i class="fas fa-phone me-1"></i>${warehouse.phone || 'Телефон не указан'}</p>
+                                <p class="card-text"><i class="fab fa-telegram me-1"></i>Chat ID: ${warehouse.chat_id || 'Не настроен'}</p>
                                 <p class="card-text">Сотрудников: ${warehouseEmployees.length}</p>
                                 <p class="card-text">Руководитель: ${warehouseManager ? warehouseManager.name : 'Не назначен'}</p>
                                 ${expiredCount > 0 ? `<p class="card-text text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Просрочено: ${expiredCount}</p>` : ''}
@@ -1607,6 +1620,7 @@
             const description = document.getElementById('warehouseDescription').value.trim();
             const address = document.getElementById('warehouseAddress').value.trim();
             const phone = document.getElementById('warehousePhone').value.trim();
+            const chatId = document.getElementById('warehouseChatId').value.trim();
             
             if (!name) {
                 showNotification('Введите название склада', 'error');
@@ -1619,6 +1633,7 @@
                 description: description,
                 address: address,
                 phone: phone,
+                chat_id: chatId,
                 created_at: new Date().toISOString()
             };
             
@@ -1645,6 +1660,7 @@
             document.getElementById('editWarehouseDescription').value = warehouse.description || '';
             document.getElementById('editWarehouseAddress').value = warehouse.address || '';
             document.getElementById('editWarehousePhone').value = warehouse.phone || '';
+            document.getElementById('editWarehouseChatId').value = warehouse.chat_id || '';
 
             const modal = new bootstrap.Modal(document.getElementById('editWarehouseModal'));
             modal.show();
@@ -1661,6 +1677,7 @@
             warehouse.description = document.getElementById('editWarehouseDescription').value.trim();
             warehouse.address = document.getElementById('editWarehouseAddress').value.trim();
             warehouse.phone = document.getElementById('editWarehousePhone').value.trim();
+            warehouse.chat_id = document.getElementById('editWarehouseChatId').value.trim();
 
             saveData();
             updateStatistics();
@@ -2181,6 +2198,34 @@
             } else {
                 history.innerHTML = '<div class="text-muted">История уведомлений пуста</div>';
             }
+        }
+
+        // Отправка уведомления в Telegram
+        function sendTelegramNotification(warehouseId, message) {
+            const warehouse = warehouses.find(w => w.id === warehouseId);
+            if (!warehouse || !warehouse.chat_id) {
+                console.log('У склада не настроен Chat ID');
+                return false;
+            }
+
+            // Здесь должна быть интеграция с Telegram Bot API
+            // Для демонстрации просто логируем
+            console.log(`Отправка в Telegram Chat ${warehouse.chat_id}: ${message}`);
+            
+            // В реальной реализации здесь будет fetch к Telegram Bot API
+            // const telegramToken = 'YOUR_BOT_TOKEN';
+            // const url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
+            // fetch(url, {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({
+            //         chat_id: warehouse.chat_id,
+            //         text: message,
+            //         parse_mode: 'HTML'
+            //     })
+            // });
+
+            return true;
         }
 
         // Отправка тестового уведомления
