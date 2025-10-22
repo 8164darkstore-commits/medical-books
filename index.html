@@ -132,6 +132,19 @@
         .login-button:active {
             transform: translateY(0);
         }
+        /* Принудительное скрытие экрана входа */
+        #loginScreen.hidden {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+        /* Принудительное показ основного экрана */
+        #mainScreen.visible {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
     </style>
 </head>
 <body>
@@ -907,9 +920,23 @@
                     
                     console.log('Вызываем showMainScreen...');
                     showMainScreen();
-                    // На всякий случай полностью убираем экран входа, чтобы не мешал стилями
-                    const ls = document.getElementById('loginScreen');
-                    if (ls) { ls.style.display = 'none'; }
+                    // Принудительно скрываем экран входа
+                    setTimeout(() => {
+                        const ls = document.getElementById('loginScreen');
+                        if (ls) { 
+                            ls.classList.add('hidden');
+                            ls.style.display = 'none';
+                            ls.style.visibility = 'hidden';
+                            ls.style.opacity = '0';
+                        }
+                        const ms = document.getElementById('mainScreen');
+                        if (ms) {
+                            ms.classList.add('visible');
+                            ms.style.display = 'block';
+                            ms.style.visibility = 'visible';
+                            ms.style.opacity = '1';
+                        }
+                    }, 100);
                     console.log('=== ВХОД ЗАВЕРШЕН УСПЕШНО ===');
                     return;
                 }
@@ -927,8 +954,23 @@
                     };
                     localStorage.setItem('current_user', JSON.stringify(currentUser));
                     showMainScreen();
-                    const ls2 = document.getElementById('loginScreen');
-                    if (ls2) { ls2.style.display = 'none'; }
+                    // Принудительно скрываем экран входа для руководителя
+                    setTimeout(() => {
+                        const ls = document.getElementById('loginScreen');
+                        if (ls) { 
+                            ls.classList.add('hidden');
+                            ls.style.display = 'none';
+                            ls.style.visibility = 'hidden';
+                            ls.style.opacity = '0';
+                        }
+                        const ms = document.getElementById('mainScreen');
+                        if (ms) {
+                            ms.classList.add('visible');
+                            ms.style.display = 'block';
+                            ms.style.visibility = 'visible';
+                            ms.style.opacity = '1';
+                        }
+                    }, 100);
                     console.log('=== ВХОД РУКОВОДИТЕЛЯ ЗАВЕРШЕН ===');
                     return;
                 }
@@ -1090,8 +1132,22 @@
         // Показать экран входа
         function showLoginScreen() {
             console.log('Показываем экран входа');
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('mainScreen').style.display = 'none';
+            const loginScreen = document.getElementById('loginScreen');
+            const mainScreen = document.getElementById('mainScreen');
+            
+            if (loginScreen) {
+                loginScreen.classList.remove('hidden');
+                loginScreen.style.display = 'flex';
+                loginScreen.style.visibility = 'visible';
+                loginScreen.style.opacity = '1';
+            }
+            
+            if (mainScreen) {
+                mainScreen.classList.remove('visible');
+                mainScreen.style.display = 'none';
+                mainScreen.style.visibility = 'hidden';
+                mainScreen.style.opacity = '0';
+            }
         }
 
         // Показать основной экран
@@ -1110,9 +1166,15 @@
                 }
                 
                 console.log('Скрываем экран входа...');
+                loginScreen.classList.add('hidden');
                 loginScreen.style.display = 'none';
+                loginScreen.style.visibility = 'hidden';
+                loginScreen.style.opacity = '0';
                 console.log('Показываем основной экран...');
+                mainScreen.classList.add('visible');
                 mainScreen.style.display = 'block';
+                mainScreen.style.visibility = 'visible';
+                mainScreen.style.opacity = '1';
                 
                 // Обновляем информацию о пользователе
                 const userInfoElement = document.getElementById('userInfo');
