@@ -741,6 +741,20 @@
             checkAuth();
             setupLoginForm();
             setupSearchAndFilters();
+            
+            // Дополнительная проверка через небольшую задержку
+            setTimeout(() => {
+                const savedUser = localStorage.getItem('current_user');
+                if (savedUser) {
+                    console.log('Дополнительная проверка: пользователь авторизован, скрываем форму входа');
+                    const loginScreen = document.getElementById('loginScreen');
+                    const mainScreen = document.getElementById('mainScreen');
+                    if (loginScreen && mainScreen) {
+                        loginScreen.style.display = 'none';
+                        mainScreen.style.display = 'block';
+                    }
+                }
+            }, 100);
         });
 
         // Настройка поиска и фильтров
@@ -1061,9 +1075,16 @@
             console.log('Проверка аутентификации...');
             const savedUser = localStorage.getItem('current_user');
             if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                console.log('Пользователь найден:', currentUser.name);
-                showMainScreen();
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    console.log('Пользователь найден:', currentUser.name);
+                    console.log('Роль пользователя:', currentUser.role);
+                    showMainScreen();
+                } catch (error) {
+                    console.error('Ошибка парсинга пользователя:', error);
+                    localStorage.removeItem('current_user');
+                    showLoginScreen();
+                }
             } else {
                 console.log('Пользователь не найден, показываем экран входа');
                 showLoginScreen();
@@ -1080,12 +1101,31 @@
         // Показать основной экран
         function showMainScreen() {
             console.log('Показываем основной экран для:', currentUser.name);
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('mainScreen').style.display = 'block';
+            
+            // Проверяем существование элементов
+            const loginScreen = document.getElementById('loginScreen');
+            const mainScreen = document.getElementById('mainScreen');
+            
+            if (!loginScreen || !mainScreen) {
+                console.error('Элементы экранов не найдены!');
+                return;
+            }
+            
+            // Скрываем экран входа и показываем основной экран
+            loginScreen.style.display = 'none';
+            mainScreen.style.display = 'block';
+            
+            console.log('Экраны переключены:', {
+                loginScreen: loginScreen.style.display,
+                mainScreen: mainScreen.style.display
+            });
             
             // Обновляем информацию о пользователе
-            document.getElementById('userInfo').textContent = 
-                `Добро пожаловать, ${currentUser.name} (${currentUser.role === 'admin' ? 'Администратор' : 'Руководитель'})`;
+            const userInfo = document.getElementById('userInfo');
+            if (userInfo) {
+                userInfo.textContent = 
+                    `Добро пожаловать, ${currentUser.name} (${currentUser.role === 'admin' ? 'Администратор' : 'Руководитель'})`;
+            }
             
             // Показываем соответствующие кнопки
             if (currentUser.role === 'admin') {
