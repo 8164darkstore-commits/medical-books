@@ -89,8 +89,6 @@
             visibility: hidden !important;
             opacity: 0 !important;
             z-index: -1 !important;
-            position: absolute !important;
-            left: -9999px !important;
         }
         
         #mainScreen.visible {
@@ -99,6 +97,19 @@
             opacity: 1 !important;
             position: relative !important;
             z-index: 1 !important;
+        }
+        
+        /* Стили для правильного отображения формы входа */
+        #loginScreen.visible {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 9999 !important;
         }
         .status-badge {
             padding: 4px 8px;
@@ -759,22 +770,14 @@
                     console.log('Дополнительная проверка: пользователь авторизован, скрываем форму входа');
                     const loginScreen = document.getElementById('loginScreen');
                     const mainScreen = document.getElementById('mainScreen');
-                    if (loginScreen && mainScreen) {
-                        // Агрессивное скрытие формы входа
-                        loginScreen.style.display = 'none';
-                        loginScreen.style.visibility = 'hidden';
-                        loginScreen.style.opacity = '0';
-                        loginScreen.style.zIndex = '-1';
-                        loginScreen.style.position = 'absolute';
-                        loginScreen.style.left = '-9999px';
-                        
-                        // Показ основного экрана
-                        mainScreen.style.display = 'block';
-                        mainScreen.style.visibility = 'visible';
-                        mainScreen.style.opacity = '1';
-                        mainScreen.style.position = 'relative';
-                        mainScreen.style.zIndex = '1';
-                    }
+                   if (loginScreen && mainScreen) {
+                       // Используем CSS классы для правильного переключения
+                       loginScreen.classList.add('hidden');
+                       loginScreen.classList.remove('visible');
+                       
+                       mainScreen.classList.add('visible');
+                       mainScreen.classList.remove('hidden');
+                   }
                 }
             }, 100);
         });
@@ -1120,16 +1123,9 @@
             const mainScreen = document.getElementById('mainScreen');
             
             if (loginScreen) {
-                // Убираем класс скрытия и добавляем стили для показа
+                // Убираем класс скрытия и добавляем класс для показа
                 loginScreen.classList.remove('hidden');
                 loginScreen.classList.add('visible');
-                loginScreen.style.display = 'flex';
-                loginScreen.style.visibility = 'visible';
-                loginScreen.style.opacity = '1';
-                loginScreen.style.zIndex = '9999';
-                loginScreen.style.position = 'fixed';
-                loginScreen.style.left = '0';
-                loginScreen.style.top = '0';
             }
             
             if (mainScreen) {
@@ -1157,20 +1153,9 @@
             // Скрываем экран входа и показываем основной экран
             loginScreen.classList.add('hidden');
             loginScreen.classList.remove('visible');
-            loginScreen.style.display = 'none';
-            loginScreen.style.visibility = 'hidden';
-            loginScreen.style.opacity = '0';
-            loginScreen.style.zIndex = '-1';
-            loginScreen.style.position = 'absolute';
-            loginScreen.style.left = '-9999px';
             
             mainScreen.classList.add('visible');
             mainScreen.classList.remove('hidden');
-            mainScreen.style.display = 'block';
-            mainScreen.style.visibility = 'visible';
-            mainScreen.style.opacity = '1';
-            mainScreen.style.position = 'relative';
-            mainScreen.style.zIndex = '1';
             
             console.log('Экраны переключены:', {
                 loginScreen: loginScreen.style.display,
