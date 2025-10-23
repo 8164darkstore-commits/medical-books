@@ -1317,6 +1317,9 @@
                                     <input type="text" class="form-control" id="employeeSearchInput" 
                                            placeholder="Поиск по ФИО сотрудника..." 
                                            onkeyup="filterEmployees('${warehouseId}')">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="clearEmployeeSearch()" title="Очистить поиск">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -2206,12 +2209,19 @@
             
             // Добавляем отфильтрованных сотрудников
             if (filteredEmployees.length === 0) {
-                const noResultsDiv = document.createElement('div');
-                noResultsDiv.className = 'alert alert-info';
-                noResultsDiv.innerHTML = searchTerm ? 
-                    `По запросу "${searchTerm}" ничего не найдено` : 
-                    'Нет сотрудников в этом складе.';
-                container.appendChild(noResultsDiv);
+                // Показываем сообщение только если есть поисковый запрос
+                if (searchTerm) {
+                    const noResultsDiv = document.createElement('div');
+                    noResultsDiv.className = 'alert alert-info';
+                    noResultsDiv.innerHTML = `По запросу "${searchTerm}" ничего не найдено`;
+                    container.appendChild(noResultsDiv);
+                } else {
+                    // Если нет поискового запроса, показываем сообщение о том, что нет сотрудников в складе
+                    const noResultsDiv = document.createElement('div');
+                    noResultsDiv.className = 'alert alert-info';
+                    noResultsDiv.innerHTML = 'Нет сотрудников в этом складе.';
+                    container.appendChild(noResultsDiv);
+                }
                 return;
             }
             
@@ -2267,6 +2277,18 @@
             if (!query) return text;
             const regex = new RegExp(`(${query})`, 'gi');
             return text.replace(regex, '<mark>$1</mark>');
+        }
+
+        // Очистка поиска
+        function clearEmployeeSearch() {
+            const searchInput = document.getElementById('employeeSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                // Получаем ID текущего склада из глобальной переменной
+                if (currentWarehouseId) {
+                    filterEmployees(currentWarehouseId);
+                }
+            }
         }
     </script>
 </body>
