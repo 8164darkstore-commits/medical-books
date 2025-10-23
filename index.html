@@ -166,14 +166,6 @@
             </form>
             
             <div id="errorMessage" class="alert alert-danger mt-3" style="display: none;"></div>
-            
-            <div class="mt-4 text-center">
-                <small class="text-muted">
-                    <strong>Тестовые доступы:</strong><br>
-                    Администратор: admin / admin123<br>
-                    Руководитель: manager / manager123
-                </small>
-            </div>
         </div>
     </div>
 
@@ -924,7 +916,7 @@
                 }
                 
                 // Проверяем администратора
-                if (username === 'admin' && password === 'admin123') {
+                if (username === 'admin' && password === 'MedAdmin2024!') {
                     console.log('✅ Администратор найден, создаем пользователя...');
                     currentUser = {
                         id: 'admin',
@@ -1056,7 +1048,7 @@
                     {
                         id: '1',
                         login: 'manager',
-                        password: 'manager123',
+                        password: 'Manager2024!',
                         name: 'Петров Петр Петрович',
                         telegram: '@petrov_manager',
                         email: 'manager@example.com',
