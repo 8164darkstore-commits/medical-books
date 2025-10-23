@@ -1129,28 +1129,55 @@
             const today = new Date();
             
             userEmployees.forEach(employee => {
-                ['medical_date', 'sanitary_date', 'fluorography_date'].forEach(dateField => {
-                    if (employee[dateField]) {
-                        const date = new Date(employee[dateField]);
-                        const diffDays = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
-                        
-                        if (diffDays < 0) {
-                            expired++;
-                        }
-                    }
-                });
+                // Проверяем медосмотр (1 год)
+                if (employee.medical_date) {
+                    const status = getDocumentStatus(employee.medical_date, 'medical');
+                    if (status.status === 'expired') expired++;
+                }
+                
+                // Проверяем сан.минимум (2 года)
+                if (employee.sanitary_date) {
+                    const status = getDocumentStatus(employee.sanitary_date, 'sanitary');
+                    if (status.status === 'expired') expired++;
+                }
+                
+                // Проверяем флюорографию (1 год)
+                if (employee.fluorography_date) {
+                    const status = getDocumentStatus(employee.fluorography_date, 'fluorography');
+                    if (status.status === 'expired') expired++;
+                }
             });
             
             document.getElementById('totalExpired').textContent = expired;
         }
 
         // Получение статуса документа
-        function getDocumentStatus(dateString) {
+        function getDocumentStatus(dateString, documentType = 'medical') {
             if (!dateString) return { status: 'no-data', text: 'Нет данных', class: 'status-info' };
             
             const today = new Date();
-            const date = new Date(dateString);
-            const diffDays = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
+            const issueDate = new Date(dateString);
+            
+            // Определяем срок действия документа в днях
+            let validityDays;
+            switch(documentType) {
+                case 'medical':
+                case 'fluorography':
+                    validityDays = 365; // 1 год
+                    break;
+                case 'sanitary':
+                    validityDays = 730; // 2 года
+                    break;
+                default:
+                    validityDays = 365; // по умолчанию 1 год
+            }
+            
+            // Рассчитываем дату истечения
+            const expiryDate = new Date(issueDate);
+            expiryDate.setDate(expiryDate.getDate() + validityDays);
+            
+            // Рассчитываем разность в днях до истечения
+            const diffDays = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
             
             if (diffDays < 0) {
                 return { status: 'expired', text: 'Просрочено', class: 'status-danger' };
@@ -1244,9 +1271,9 @@
             }
             
             warehouseEmployees.forEach(employee => {
-                const medicalStatus = getDocumentStatus(employee.medical_date);
-                const sanitaryStatus = getDocumentStatus(employee.sanitary_date);
-                const fluorographyStatus = getDocumentStatus(employee.fluorography_date);
+                const medicalStatus = getDocumentStatus(employee.medical_date, 'medical');
+                const sanitaryStatus = getDocumentStatus(employee.sanitary_date, 'sanitary');
+                const fluorographyStatus = getDocumentStatus(employee.fluorography_date, 'fluorography');
                 
                 // Определяем общий статус сотрудника
                 let cardClass = 'card mb-2 employee-card';
@@ -1351,9 +1378,9 @@
             currentWarehouseId = warehouseId;
             
             warehouseEmployees.forEach(employee => {
-                const medicalStatus = getDocumentStatus(employee.medical_date);
-                const sanitaryStatus = getDocumentStatus(employee.sanitary_date);
-                const fluorographyStatus = getDocumentStatus(employee.fluorography_date);
+                const medicalStatus = getDocumentStatus(employee.medical_date, 'medical');
+                const sanitaryStatus = getDocumentStatus(employee.sanitary_date, 'sanitary');
+                const fluorographyStatus = getDocumentStatus(employee.fluorography_date, 'fluorography');
                 
                 // Определяем общий статус сотрудника
                 let cardClass = 'card mb-2 employee-card';
@@ -1897,7 +1924,7 @@
                 // Медосмотр
                 if (employee.medical_date) {
                     totalMedical++;
-                    const status = getDocumentStatus(employee.medical_date);
+                    const status = getDocumentStatus(employee.medical_date, 'medical');
                     if (status.status === 'expired') expiredMedical++;
                     if (status.status === 'warning') warningMedical++;
                 }
@@ -1905,7 +1932,7 @@
                 // Сан.минимум
                 if (employee.sanitary_date) {
                     totalSanitary++;
-                    const status = getDocumentStatus(employee.sanitary_date);
+                    const status = getDocumentStatus(employee.sanitary_date, 'sanitary');
                     if (status.status === 'expired') expiredSanitary++;
                     if (status.status === 'warning') warningSanitary++;
                 }
@@ -1913,7 +1940,7 @@
                 // Флюорография
                 if (employee.fluorography_date) {
                     totalFluorography++;
-                    const status = getDocumentStatus(employee.fluorography_date);
+                    const status = getDocumentStatus(employee.fluorography_date, 'fluorography');
                     if (status.status === 'expired') expiredFluorography++;
                     if (status.status === 'warning') warningFluorography++;
                 }
@@ -2230,9 +2257,9 @@
             }
             
             filteredEmployees.forEach(employee => {
-                const medicalStatus = getDocumentStatus(employee.medical_date);
-                const sanitaryStatus = getDocumentStatus(employee.sanitary_date);
-                const fluorographyStatus = getDocumentStatus(employee.fluorography_date);
+                const medicalStatus = getDocumentStatus(employee.medical_date, 'medical');
+                const sanitaryStatus = getDocumentStatus(employee.sanitary_date, 'sanitary');
+                const fluorographyStatus = getDocumentStatus(employee.fluorography_date, 'fluorography');
                 
                 // Определяем общий статус сотрудника
                 let cardClass = 'card mb-2 employee-card';
