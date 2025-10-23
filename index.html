@@ -82,6 +82,24 @@
             max-width: 400px;
             width: 100%;
         }
+        
+        /* Стили для скрытия формы входа */
+        #loginScreen.hidden {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            z-index: -1 !important;
+            position: absolute !important;
+            left: -9999px !important;
+        }
+        
+        #mainScreen.visible {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            z-index: 1 !important;
+        }
         .status-badge {
             padding: 4px 8px;
             border-radius: 12px;
@@ -750,8 +768,20 @@
                     const loginScreen = document.getElementById('loginScreen');
                     const mainScreen = document.getElementById('mainScreen');
                     if (loginScreen && mainScreen) {
+                        // Агрессивное скрытие формы входа
                         loginScreen.style.display = 'none';
+                        loginScreen.style.visibility = 'hidden';
+                        loginScreen.style.opacity = '0';
+                        loginScreen.style.zIndex = '-1';
+                        loginScreen.style.position = 'absolute';
+                        loginScreen.style.left = '-9999px';
+                        
+                        // Показ основного экрана
                         mainScreen.style.display = 'block';
+                        mainScreen.style.visibility = 'visible';
+                        mainScreen.style.opacity = '1';
+                        mainScreen.style.position = 'relative';
+                        mainScreen.style.zIndex = '1';
                     }
                 }
             }, 100);
@@ -1094,8 +1124,20 @@
         // Показать экран входа
         function showLoginScreen() {
             console.log('Показываем экран входа');
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('mainScreen').style.display = 'none';
+            const loginScreen = document.getElementById('loginScreen');
+            const mainScreen = document.getElementById('mainScreen');
+            
+            if (loginScreen) {
+                loginScreen.style.display = 'flex';
+                loginScreen.style.visibility = 'visible';
+                loginScreen.style.opacity = '1';
+                loginScreen.style.zIndex = '9999';
+            }
+            
+            if (mainScreen) {
+                mainScreen.style.display = 'none';
+                mainScreen.style.visibility = 'hidden';
+            }
         }
 
         // Показать основной экран
@@ -1112,8 +1154,10 @@
             }
             
             // Скрываем экран входа и показываем основной экран
-            loginScreen.style.display = 'none';
-            mainScreen.style.display = 'block';
+            loginScreen.classList.add('hidden');
+            loginScreen.classList.remove('visible');
+            mainScreen.classList.add('visible');
+            mainScreen.classList.remove('hidden');
             
             console.log('Экраны переключены:', {
                 loginScreen: loginScreen.style.display,
