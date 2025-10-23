@@ -502,10 +502,6 @@
                             <input type="text" class="form-control" id="employeeName" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Должность</label>
-                            <input type="text" class="form-control" id="employeePosition">
-                        </div>
-                        <div class="mb-3">
                             <label class="form-label">Дата медосмотра</label>
                             <input type="date" class="form-control" id="employeeMedicalDate">
                         </div>
@@ -519,15 +515,8 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Telegram</label>
-                            <input type="text" class="form-control" id="employeeTelegram">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Телефон</label>
-                            <input type="text" class="form-control" id="employeePhone">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" id="employeeEmail">
+                            <input type="text" class="form-control" id="employeeTelegram" placeholder="@username или username">
+                            <small class="form-text text-muted">Для уведомлений в рабочий чат</small>
                         </div>
                     </form>
                 </div>
@@ -561,10 +550,6 @@
                             <input type="text" class="form-control" id="editEmployeeName" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Должность</label>
-                            <input type="text" class="form-control" id="editEmployeePosition">
-                        </div>
-                        <div class="mb-3">
                             <label class="form-label">Дата медосмотра</label>
                             <input type="date" class="form-control" id="editEmployeeMedicalDate">
                         </div>
@@ -578,15 +563,8 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Telegram</label>
-                            <input type="text" class="form-control" id="editEmployeeTelegram">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Телефон</label>
-                            <input type="text" class="form-control" id="editEmployeePhone">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" id="editEmployeeEmail">
+                            <input type="text" class="form-control" id="editEmployeeTelegram" placeholder="@username или username">
+                            <small class="form-text text-muted">Для уведомлений в рабочий чат</small>
                         </div>
                     </form>
                 </div>
@@ -617,10 +595,6 @@
                         <div class="mb-3">
                             <label class="form-label">Список ФИО (по одному на строку)</label>
                             <textarea class="form-control" id="bulkNames" rows="10" placeholder="Иванов Иван Иванович&#10;Петров Петр Петрович&#10;Сидоров Сидор Сидорович"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Должность (для всех)</label>
-                            <input type="text" class="form-control" id="bulkPosition" placeholder="Сотрудник склада">
                         </div>
                     </form>
                 </div>
@@ -1716,13 +1690,10 @@
         function addEmployee() {
             const warehouseId = document.getElementById('employeeWarehouse').value;
             const name = document.getElementById('employeeName').value.trim();
-            const position = document.getElementById('employeePosition').value.trim();
             const medicalDate = document.getElementById('employeeMedicalDate').value;
             const sanitaryDate = document.getElementById('employeeSanitaryDate').value;
             const fluorographyDate = document.getElementById('employeeFluorographyDate').value;
             const telegram = document.getElementById('employeeTelegram').value.trim();
-            const phone = document.getElementById('employeePhone').value.trim();
-            const email = document.getElementById('employeeEmail').value.trim();
             
             if (!warehouseId || !name) {
                 showNotification('Выберите склад и введите ФИО', 'error');
@@ -1733,13 +1704,13 @@
                 id: Date.now().toString(),
                 warehouse_id: warehouseId,
                 name: name,
-                position: position,
+                position: '', // Убрано поле должности
                 medical_date: medicalDate,
                 sanitary_date: sanitaryDate,
                 fluorography_date: fluorographyDate,
                 telegram: telegram,
-                phone: phone,
-                email: email,
+                phone: '', // Убрано поле телефона
+                email: '', // Убрано поле email
                 created_at: new Date().toISOString()
             };
             
@@ -1767,13 +1738,10 @@
 
             document.getElementById('editEmployeeId').value = employee.id;
             document.getElementById('editEmployeeName').value = employee.name;
-            document.getElementById('editEmployeePosition').value = employee.position || '';
             document.getElementById('editEmployeeMedicalDate').value = employee.medical_date || '';
             document.getElementById('editEmployeeSanitaryDate').value = employee.sanitary_date || '';
             document.getElementById('editEmployeeFluorographyDate').value = employee.fluorography_date || '';
             document.getElementById('editEmployeeTelegram').value = employee.telegram || '';
-            document.getElementById('editEmployeePhone').value = employee.phone || '';
-            document.getElementById('editEmployeeEmail').value = employee.email || '';
 
             const select = document.getElementById('editEmployeeWarehouse');
             select.innerHTML = '<option value="">Выберите склад</option>';
@@ -1806,13 +1774,10 @@
 
             employee.warehouse_id = document.getElementById('editEmployeeWarehouse').value;
             employee.name = document.getElementById('editEmployeeName').value.trim();
-            employee.position = document.getElementById('editEmployeePosition').value.trim();
             employee.medical_date = document.getElementById('editEmployeeMedicalDate').value;
             employee.sanitary_date = document.getElementById('editEmployeeSanitaryDate').value;
             employee.fluorography_date = document.getElementById('editEmployeeFluorographyDate').value;
             employee.telegram = document.getElementById('editEmployeeTelegram').value.trim();
-            employee.phone = document.getElementById('editEmployeePhone').value.trim();
-            employee.email = document.getElementById('editEmployeeEmail').value.trim();
 
             saveData();
             updateStatistics();
@@ -1833,7 +1798,6 @@
         function bulkAddEmployees() {
             const warehouseId = document.getElementById('bulkWarehouse').value;
             const namesText = document.getElementById('bulkNames').value.trim();
-            const position = document.getElementById('bulkPosition').value.trim();
             
             if (!warehouseId || !namesText) {
                 showNotification('Выберите склад и введите список ФИО', 'error');
@@ -1854,13 +1818,13 @@
                         id: (Date.now() + Math.random()).toString(),
                         warehouse_id: warehouseId,
                         name: name.trim(),
-                        position: position,
+                        position: '', // Убрано поле должности
                         medical_date: '',
                         sanitary_date: '',
                         fluorography_date: '',
                         telegram: '',
-                        phone: '',
-                        email: '',
+                        phone: '', // Убрано поле телефона
+                        email: '', // Убрано поле email
                         created_at: new Date().toISOString()
                     };
                     
@@ -2274,16 +2238,13 @@
                             <div class="col-md-8">
                                 <h6 class="card-title">${highlightSearchTerm(employee.name, searchTerm)}</h6>
                                 <p class="card-text small">
-                                    <strong>Должность:</strong> ${employee.position || 'Не указана'}<br>
                                     <strong>Медосмотр:</strong> ${employee.medical_date || 'Не указан'} 
                                     <span class="status-badge ${medicalStatus.class}">${medicalStatus.text}</span><br>
                                     <strong>Сан.минимум:</strong> ${employee.sanitary_date || 'Не указан'} 
                                     <span class="status-badge ${sanitaryStatus.class}">${sanitaryStatus.text}</span><br>
                                     <strong>Флюорография:</strong> ${employee.fluorography_date || 'Не указан'} 
                                     <span class="status-badge ${fluorographyStatus.class}">${fluorographyStatus.text}</span><br>
-                                    <strong>Telegram:</strong> ${employee.telegram || 'Не указан'}<br>
-                                    <strong>Телефон:</strong> ${employee.phone || 'Не указан'}<br>
-                                    <strong>Email:</strong> ${employee.email || 'Не указан'}
+                                    <strong>Telegram:</strong> ${employee.telegram || 'Не указан'}
                                 </p>
                             </div>
                             <div class="col-md-4 text-end">
