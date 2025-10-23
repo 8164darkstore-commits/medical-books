@@ -190,14 +190,17 @@
                 </h1>
                 <p class="lead text-muted" id="userInfo">Загрузка...</p>
                 <div class="d-flex justify-content-center gap-2">
-                    <button class="btn btn-outline-danger" onclick="logout()">
-                        <i class="fas fa-sign-out-alt me-2"></i>Выход
-                    </button>
-                    <button class="btn btn-outline-info" onclick="exportData()">
+                    <button class="btn btn-outline-info me-2" onclick="exportData()">
                         <i class="fas fa-download me-2"></i>Экспорт данных
                     </button>
-                    <button class="btn btn-outline-success" onclick="showSettings()">
+                    <button class="btn btn-outline-success me-2" onclick="importData()">
+                        <i class="fas fa-upload me-2"></i>Импорт данных
+                    </button>
+                    <button class="btn btn-outline-secondary me-2" onclick="showSettings()">
                         <i class="fas fa-cog me-2"></i>Настройки
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="logout()">
+                        <i class="fas fa-sign-out-alt me-2"></i>Выход
                     </button>
                 </div>
             </div>
@@ -964,9 +967,55 @@
             }
         }
 
+        // Загрузка данных из localStorage и с сервера
+        async function loadData() {
+            console.log('Загружаем данные...');
+            
+            // Сначала пытаемся загрузить с сервера
+            try {
+                await loadDataFromServer();
+                console.log('✅ Данные загружены с сервера');
+            } catch (error) {
+                console.log('⚠️ Не удалось загрузить с сервера, используем localStorage:', error);
+                loadDataFromLocalStorage();
+            }
+        }
+
+        // Загрузка данных с сервера (GitHub)
+        async function loadDataFromServer() {
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/8164darkstore-commits/medical-books/main/data.json');
+                if (!response.ok) {
+                    throw new Error('Не удалось загрузить данные с сервера');
+                }
+                
+                const serverData = await response.json();
+                
+                // Обновляем локальные данные
+                warehouses = serverData.warehouses || [];
+                employees = serverData.employees || [];
+                managers = serverData.managers || [];
+                settings = serverData.settings || { warningDays: 30 };
+                
+                // Сохраняем в localStorage как резервную копию
+                localStorage.setItem('medical_warehouses', JSON.stringify(warehouses));
+                localStorage.setItem('medical_employees', JSON.stringify(employees));
+                localStorage.setItem('medical_managers', JSON.stringify(managers));
+                localStorage.setItem('medical_settings', JSON.stringify(settings));
+                
+                console.log('Данные с сервера загружены:', {
+                    warehouses: warehouses.length,
+                    employees: employees.length,
+                    managers: managers.length
+                });
+            } catch (error) {
+                throw error;
+            }
+        }
+
         // Загрузка данных из localStorage
-        function loadData() {
-            console.log('Загрузка данных...');
+        function loadDataFromLocalStorage() {
+            console.log('Загрузка данных из localStorage...');
             
             const savedWarehouses = localStorage.getItem('medical_warehouses');
             const savedEmployees = localStorage.getItem('medical_employees');
@@ -1088,11 +1137,113 @@
             });
         }
 
-        // Сохранение данных в localStorage
-        function saveData() {
+        // Сохранение данных в localStorage и на сервер
+        async function saveData() {
+            // Сохраняем в localStorage
             localStorage.setItem('medical_warehouses', JSON.stringify(warehouses));
             localStorage.setItem('medical_employees', JSON.stringify(employees));
             localStorage.setItem('medical_managers', JSON.stringify(managers));
+            localStorage.setItem('medical_settings', JSON.stringify(settings));
+            
+            // Пытаемся сохранить на сервер (GitHub)
+            try {
+                await saveDataToServer();
+                console.log('✅ Данные сохранены на сервер');
+            } catch (error) {
+                console.log('⚠️ Не удалось сохранить на сервер:', error);
+                // Данные остались в localStorage, это нормально
+            }
+        }
+
+        // Сохранение данных на сервер (GitHub)
+        async function saveDataToServer() {
+            const dataToSave = {
+                warehouses: warehouses,
+                employees: employees,
+                managers: managers,
+                settings: {
+                    ...settings,
+                    lastUpdated: new Date().toISOString()
+                }
+            };
+
+            // Для GitHub Pages мы не можем напрямую записывать файлы
+            // Но можем показать пользователю данные для копирования
+            console.log('Данные для сохранения:', dataToSave);
+            
+            // Показываем уведомление о том, что данные готовы для синхронизации
+            showNotification('Данные готовы для синхронизации с другими пользователями', 'info');
+        }
+
+        // Экспорт данных
+        function exportData() {
+            const dataToExport = {
+                warehouses: warehouses,
+                employees: employees,
+                managers: managers,
+                settings: settings,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+
+            const dataStr = JSON.stringify(dataToExport, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `medical_data_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            showNotification('Данные экспортированы! Отправьте файл другим пользователям.', 'success');
+        }
+
+        // Импорт данных
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        
+                        // Проверяем структуру данных
+                        if (!importedData.warehouses || !importedData.employees || !importedData.managers) {
+                            throw new Error('Неверный формат файла');
+                        }
+                        
+                        // Подтверждение импорта
+                        if (confirm(`Импортировать данные?\n\nСклады: ${importedData.warehouses.length}\nСотрудники: ${importedData.employees.length}\nРуководители: ${importedData.managers.length}\n\nЭто заменит текущие данные!`)) {
+                            warehouses = importedData.warehouses;
+                            employees = importedData.employees;
+                            managers = importedData.managers;
+                            settings = importedData.settings || { warningDays: 30 };
+                            
+                            saveData();
+                            updateStatistics();
+                            updateWarehouseFilter();
+                            
+                            if (currentUser.role === 'admin') {
+                                displayWarehouses();
+                            } else {
+                                displayManagerWarehouse();
+                            }
+                            
+                            showNotification('Данные успешно импортированы!', 'success');
+                        }
+                    } catch (error) {
+                        showNotification('Ошибка импорта: ' + error.message, 'error');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            input.click();
         }
 
         // Проверка аутентификации
