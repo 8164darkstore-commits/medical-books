@@ -1293,16 +1293,13 @@
                             <div class="col-md-8">
                                 <h6 class="card-title">${employee.name}</h6>
                                 <p class="card-text small">
-                                    <strong>Должность:</strong> ${employee.position || 'Не указана'}<br>
                                     <strong>Медосмотр:</strong> ${employee.medical_date || 'Не указан'} 
                                     <span class="status-badge ${medicalStatus.class}">${medicalStatus.text}</span><br>
                                     <strong>Сан.минимум:</strong> ${employee.sanitary_date || 'Не указан'} 
                                     <span class="status-badge ${sanitaryStatus.class}">${sanitaryStatus.text}</span><br>
                                     <strong>Флюорография:</strong> ${employee.fluorography_date || 'Не указан'} 
                                     <span class="status-badge ${fluorographyStatus.class}">${fluorographyStatus.text}</span><br>
-                                    <strong>Telegram:</strong> ${employee.telegram || 'Не указан'}<br>
-                                    <strong>Телефон:</strong> ${employee.phone || 'Не указан'}<br>
-                                    <strong>Email:</strong> ${employee.email || 'Не указан'}
+                                    <strong>Telegram:</strong> ${employee.telegram || 'Не указан'}
                                 </p>
                             </div>
                             <div class="col-md-4 text-end">
