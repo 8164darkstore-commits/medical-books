@@ -2202,10 +2202,14 @@
                 countElement.textContent = `Найдено сотрудников: ${filteredEmployees.length}`;
             }
             
-            // Очищаем контейнер с сотрудниками
+            // Очищаем контейнер с сотрудниками и сообщениями
             const container = document.getElementById('contentArea');
             const existingCards = container.querySelectorAll('.employee-card');
             existingCards.forEach(card => card.remove());
+            
+            // Очищаем все alert-сообщения (включая "ничего не найдено")
+            const existingAlerts = container.querySelectorAll('.alert');
+            existingAlerts.forEach(alert => alert.remove());
             
             // Добавляем отфильтрованных сотрудников
             if (filteredEmployees.length === 0) {
@@ -2284,6 +2288,12 @@
             const searchInput = document.getElementById('employeeSearchInput');
             if (searchInput) {
                 searchInput.value = '';
+                // Дополнительно очищаем все alert-сообщения
+                const container = document.getElementById('contentArea');
+                if (container) {
+                    const existingAlerts = container.querySelectorAll('.alert');
+                    existingAlerts.forEach(alert => alert.remove());
+                }
                 // Получаем ID текущего склада из глобальной переменной
                 if (currentWarehouseId) {
                     filterEmployees(currentWarehouseId);
