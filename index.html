@@ -199,6 +199,9 @@
                     <button class="btn btn-outline-secondary me-2" onclick="showSettings()">
                         <i class="fas fa-cog me-2"></i>Настройки
                     </button>
+                    <button class="btn btn-outline-warning me-2" onclick="showSyncSettings()">
+                        <i class="fas fa-sync me-2"></i>Синхронизация
+                    </button>
                     <button class="btn btn-outline-danger" onclick="logout()">
                         <i class="fas fa-sign-out-alt me-2"></i>Выход
                     </button>
@@ -630,6 +633,57 @@
         </div>
     </div>
 
+    <!-- Модальное окно настройки синхронизации -->
+    <div class="modal fade" id="syncSettingsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Настройка синхронизации данных</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>JSONBin.io</strong> - бесплатный сервис для синхронизации данных в реальном времени
+                    </div>
+                    
+                    <form id="syncSettingsForm">
+                        <div class="mb-3">
+                            <label class="form-label">API Key (Master Key)</label>
+                            <input type="text" class="form-control" id="jsonbinApiKey" placeholder="Введите ваш API ключ">
+                            <small class="form-text text-muted">
+                                Получите бесплатный API ключ на <a href="https://jsonbin.io" target="_blank">jsonbin.io</a>
+                            </small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Bin ID</label>
+                            <input type="text" class="form-control" id="jsonbinBinId" placeholder="Введите ID вашего bin">
+                            <small class="form-text text-muted">
+                                Создайте новый bin на сайте и скопируйте его ID
+                            </small>
+                        </div>
+                    </form>
+                    
+                    <div class="mt-3">
+                        <h6>Инструкция:</h6>
+                        <ol class="small">
+                            <li>Зайдите на <a href="https://jsonbin.io" target="_blank">jsonbin.io</a></li>
+                            <li>Зарегистрируйтесь (бесплатно)</li>
+                            <li>Создайте новый bin</li>
+                            <li>Скопируйте Master Key и Bin ID</li>
+                            <li>Вставьте их в поля выше</li>
+                            <li>Нажмите "Сохранить настройки"</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSyncSettings()">Сохранить настройки</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Модальное окно отчетов -->
     <div class="modal fade" id="reportsModal" tabindex="-1">
         <div class="modal-dialog modal-xl">
@@ -981,12 +1035,62 @@
             }
         }
 
-        // Загрузка данных с сервера (GitHub)
+        // JSONBin.io конфигурация (загружается из localStorage)
+        let JSONBIN_API_KEY = localStorage.getItem('jsonbin_api_key') || 'YOUR_API_KEY_HERE';
+        let JSONBIN_BIN_ID = localStorage.getItem('jsonbin_bin_id') || 'YOUR_BIN_ID_HERE';
+        
+        // Загрузка данных с JSONBin.io
         async function loadDataFromServer() {
+            try {
+                // Если нет настроенного JSONBin, используем GitHub как резерв
+                if (JSONBIN_API_KEY === 'YOUR_API_KEY_HERE' || JSONBIN_BIN_ID === 'YOUR_BIN_ID_HERE') {
+                    console.log('JSONBin не настроен, используем GitHub...');
+                    return await loadDataFromGitHub();
+                }
+                
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+                    headers: {
+                        'X-Master-Key': JSONBIN_API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Не удалось загрузить данные с JSONBin');
+                }
+                
+                const result = await response.json();
+                const serverData = result.record;
+                
+                // Обновляем локальные данные
+                warehouses = serverData.warehouses || [];
+                employees = serverData.employees || [];
+                managers = serverData.managers || [];
+                settings = serverData.settings || { warningDays: 30 };
+                
+                // Сохраняем в localStorage как резервную копию
+                localStorage.setItem('medical_warehouses', JSON.stringify(warehouses));
+                localStorage.setItem('medical_employees', JSON.stringify(employees));
+                localStorage.setItem('medical_managers', JSON.stringify(managers));
+                localStorage.setItem('medical_settings', JSON.stringify(settings));
+                
+                console.log('Данные с JSONBin загружены:', {
+                    warehouses: warehouses.length,
+                    employees: employees.length,
+                    managers: managers.length
+                });
+            } catch (error) {
+                console.log('Ошибка загрузки с JSONBin, пробуем GitHub...', error);
+                return await loadDataFromGitHub();
+            }
+        }
+        
+        // Загрузка данных с GitHub (резервный вариант)
+        async function loadDataFromGitHub() {
             try {
                 const response = await fetch('https://raw.githubusercontent.com/8164darkstore-commits/medical-books/main/data.json');
                 if (!response.ok) {
-                    throw new Error('Не удалось загрузить данные с сервера');
+                    throw new Error('Не удалось загрузить данные с GitHub');
                 }
                 
                 const serverData = await response.json();
@@ -1003,7 +1107,7 @@
                 localStorage.setItem('medical_managers', JSON.stringify(managers));
                 localStorage.setItem('medical_settings', JSON.stringify(settings));
                 
-                console.log('Данные с сервера загружены:', {
+                console.log('Данные с GitHub загружены:', {
                     warehouses: warehouses.length,
                     employees: employees.length,
                     managers: managers.length
@@ -1155,7 +1259,7 @@
             }
         }
 
-        // Сохранение данных на сервер (GitHub)
+        // Сохранение данных на сервер (JSONBin.io или GitHub)
         async function saveDataToServer() {
             const dataToSave = {
                 warehouses: warehouses,
@@ -1167,8 +1271,30 @@
                 }
             };
 
-            // Для GitHub Pages мы не можем напрямую записывать файлы
-            // Но можем показать пользователю данные для копирования
+            // Пытаемся сохранить в JSONBin.io
+            if (JSONBIN_API_KEY !== 'YOUR_API_KEY_HERE' && JSONBIN_BIN_ID !== 'YOUR_BIN_ID_HERE') {
+                try {
+                    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                        method: 'PUT',
+                        headers: {
+                            'X-Master-Key': JSONBIN_API_KEY,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(dataToSave)
+                    });
+                    
+                    if (response.ok) {
+                        console.log('✅ Данные сохранены в JSONBin.io');
+                        showNotification('Данные синхронизированы! Изменения видны всем пользователям.', 'success');
+                        return;
+                    }
+                } catch (error) {
+                    console.log('Ошибка сохранения в JSONBin:', error);
+                }
+            }
+            
+            // Если JSONBin не настроен или не работает, используем GitHub
+            console.log('Используем GitHub для синхронизации...');
             console.log('Данные для сохранения:', dataToSave);
             
             // Показываем уведомление о том, что данные готовы для синхронизации
@@ -1244,6 +1370,49 @@
             };
             
             input.click();
+        }
+
+        // Показать настройки синхронизации
+        function showSyncSettings() {
+            // Загружаем сохраненные настройки
+            const savedApiKey = localStorage.getItem('jsonbin_api_key') || '';
+            const savedBinId = localStorage.getItem('jsonbin_bin_id') || '';
+            
+            document.getElementById('jsonbinApiKey').value = savedApiKey;
+            document.getElementById('jsonbinBinId').value = savedBinId;
+            
+            const modal = new bootstrap.Modal(document.getElementById('syncSettingsModal'));
+            modal.show();
+        }
+
+        // Сохранить настройки синхронизации
+        function saveSyncSettings() {
+            const apiKey = document.getElementById('jsonbinApiKey').value.trim();
+            const binId = document.getElementById('jsonbinBinId').value.trim();
+            
+            if (!apiKey || !binId) {
+                showNotification('Заполните все поля', 'error');
+                return;
+            }
+            
+            // Сохраняем настройки
+            localStorage.setItem('jsonbin_api_key', apiKey);
+            localStorage.setItem('jsonbin_bin_id', binId);
+            
+            // Обновляем глобальные переменные
+            window.JSONBIN_API_KEY = apiKey;
+            window.JSONBIN_BIN_ID = binId;
+            
+            // Закрываем модальное окно
+            const modal = bootstrap.Modal.getInstance(document.getElementById('syncSettingsModal'));
+            modal.hide();
+            
+            showNotification('Настройки синхронизации сохранены! Теперь данные будут синхронизироваться в реальном времени.', 'success');
+            
+            // Пробуем загрузить данные с нового источника
+            setTimeout(() => {
+                loadData();
+            }, 1000);
         }
 
         // Проверка аутентификации
@@ -2560,3 +2729,4 @@
     </script>
 </body>
 </html>
+
