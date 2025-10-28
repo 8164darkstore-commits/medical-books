@@ -755,6 +755,15 @@
                             <label class="form-label">Email для уведомлений</label>
                             <input type="email" class="form-control" id="notificationEmail">
                         </div>
+                        <hr>
+                        <div class="mb-3">
+                            <label class="form-label">GitHub Personal Access Token</label>
+                            <input type="password" class="form-control" id="githubToken" placeholder="Введите токен для автоСинхронизации adaptive data.json на GitHub">
+                            <small class="form-text text-muted">
+                                Для мгновенной синхронизации данных между пользователями. 
+                                Создайте токен на <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a> с правами <code>repo</code>
+                            </small>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -808,7 +817,8 @@
             warningDays: 15,
             notificationTime: '09:00',
             autoNotifications: true,
-            notificationEmail: ''
+            notificationEmail: '',
+            githubToken: '' // GitHub Personal Access Token
         };
 
         // Инициализация при загрузке страницы
@@ -884,6 +894,7 @@
             settings.notificationTime = document.getElementById('notificationTime').value;
             settings.autoNotifications = document.getElementById('autoNotifications').checked;
             settings.notificationEmail = document.getElementById('notificationEmail').value;
+            settings.githubToken = document.getElementById('githubToken').value.trim();
 
             localStorage.setItem('medical_settings', JSON.stringify(settings));
             showNotification('Настройки сохранены!', 'success');
@@ -898,6 +909,7 @@
             document.getElementById('notificationTime').value = settings.notificationTime;
             document.getElementById('autoNotifications').checked = settings.autoNotifications;
             document.getElementById('notificationEmail').value = settings.notificationEmail;
+            document.getElementById('githubToken').value = settings.githubToken || '';
 
             const modal = new bootstrap.Modal(document.getElementById('settingsModal'));
             modal.show();
@@ -1237,10 +1249,7 @@
 
             console.log('Данные для синхронизации:', dataToSave);
             
-            // Показываем уведомление о том, что данные готовы для синхронизации
-            showNotification('Данные готовы для синхронизации! Используйте экспорт/импорт для обмена данными.', 'info');
-            
-            // Автоматически обновляем файл на GitHub через локальную систему
+            // Автоматически обновляем файл на GitHub через API
             try {
                 await updateGitHubFile(dataToSave);
             } catch (error) {
@@ -1248,36 +1257,87 @@
             }
         }
 
-        // Автоматическое обновление файла на GitHub
+        // Автоматическое обновление файла на GitHub через API
         async function updateGitHubFile(data) {
             try {
-                // Создаем файл данных
+                // Проверяем наличие токена
+                const token = settings.githubToken;
+                if (!token) {
+                    console.log('⚠️ GitHub токен не настроен, используем скачивание файла');
+                    downloadDataFile(data);
+                    return;
+                }
+                
                 const dataStr = JSON.stringify(data, null, 2);
+                const dataBase64 = btoa(unescape(encodeURIComponent(dataStr)));
                 
-                // Показываем прогресс
-                showNotification('Подготавливаем данные для GitHub...', 'info');
+                // Получаем текущий файл чтобы узнать sha
+                const getResponse = await fetch(`https://api.github.com/repos/8164darkstore-commits/medical-books/contents/data.json?ref=main`, {
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
                 
-                // Создаем файл для скачивания
-                const blob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
+                let sha = null;
+                if (getResponse.ok) {
+                    const fileInfo = await getResponse.json();
+                    sha = fileInfo.sha;
+                }
                 
-                // Создаем ссылку для скачивания
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'data.json';
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
+                // Обновляем файл
+                const updateBody = {
+                    message: `Auto-sync: ${new Date().toISOString()}`,
+                    content: dataBase64,
+                    branch: 'main'
+                };
                 
-                console.log('✅ Файл data.json готов для обновления');
-                showNotification('Файл data.json скачан! Замените им файл в папке проекта и зафиксируйте изменения в Git.', 'success');
+                if (sha) {
+                    updateBody.sha = sha;
+                }
+                
+                const response = await fetch(`https://api.github.com/repos/8164darkstore-commits/medical-books/contents/data.json`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateBody)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Данные синхронизированы с GitHub');
+                    showNotification('✅ Данные синхронизированы с GitHub!', 'success');
+                    return result;
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Ошибка сохранения на GitHub');
+                }
                 
             } catch (error) {
-                console.log('Ошибка создания файла:', error);
-                showNotification('Ошибка создания файла. Используйте экспорт данных.', 'error');
+                console.log('Ошибка синхронизации с GitHub:', error);
+                showNotification('⚠️ Не удалось синхронизировать с GitHub. Данные сохранены локально.', 'warning');
+                // Fallback - скачиваем файл
+                downloadDataFile(data);
             }
+        }
+        
+        // Скачивание файла как fallback
+        function downloadDataFile(data) {
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'data.json';
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            console.log('✅ Файл data.json скачан');
         }
 
         // Экспорт данных
@@ -2708,4 +2768,5 @@
     </script>
 </body>
 </html>
+
 
